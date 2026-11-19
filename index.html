@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>교직원 연금 &amp; 공제회 정밀 계산기 v2.1 (2026 최신 법령·공단 소득재분배 비율표)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Pretendard & Inter Font -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Pretendard"', '"Noto Sans KR"', '"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            800: '#162544',
+                            900: '#0B132B',
+                            950: '#060B19'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Pretendard', 'Noto Sans KR', 'Inter', sans-serif;
+            background-color: #F1F5F9;
+            color: #0F172A;
+            -webkit-font-smoothing: antialiased;
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        /* 커스텀 슬라이더 */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #CBD5E1;
+            height: 0.45rem;
+            border-radius: 999px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -5px;
+            background-color: #059669;
+            height: 1.15rem;
+            width: 1.15rem;
+            border-radius: 50%;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background-color: #047857;
+        }
+        input[type="range"].indigo-slider::-webkit-slider-thumb {
+            background-color: #4338CA;
+        }
+        input[type="range"].indigo-slider::-webkit-slider-thumb:hover {
+            background-color: #3730A3;
+        }
+        /* 탭 전환 애니메이션 */
+        .tab-panel {
+            display: none;
+            animation: panelFadeIn 0.2s ease-out;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        @keyframes panelFadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- =====================================================================
+         상단 헤더 & 3단 탭 네비게이션
+    ====================================================================== -->
+    <header class="bg-navy-900 text-white shadow-xl sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <!-- 타이틀 영역 -->
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-indigo-500 via-emerald-500 to-teal-600 p-2.5 rounded-xl shadow-md shrink-0">
+                    <i data-lucide="landmark" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-white">교직원 연금 &amp; 공제회 정밀 계산기 v2.1</h1>
+                        <span class="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2.5 py-0.5 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            2026 최신 법령·공단 소득재분배 비율표 완전 반영
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5">공무원연금공단 15구간 소득재분배(1원 단위 검산) · 30년 한도 산식 · 교직원공제회 3대 연금화 상품 분리</p>
+                </div>
+            </div>
+
+            <!-- 우측 버튼 영역 -->
+            <div class="flex items-center gap-2 self-end sm:self-auto">
+                <button onclick="openRedistModal()" class="flex items-center gap-1.5 bg-indigo-900/80 hover:bg-indigo-800 text-indigo-200 border border-indigo-500/50 text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl transition">
+                    <i data-lucide="table-2" class="w-4 h-4"></i>
+                    <span>15구간 비율표</span>
+                </button>
+                <button onclick="openCriteriaModal()" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl transition">
+                    <i data-lucide="book-open-check" class="w-4 h-4"></i>
+                    <span>법령·금리 기준</span>
+                </button>
+                <button onclick="resetAllDefaults()" class="flex items-center gap-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs sm:text-sm font-medium px-3 py-2 rounded-xl transition" title="모든 입력값 초기화">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">초기화</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 3단 네비게이션 탭 -->
+        <div class="bg-navy-800/95 border-t border-slate-700/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto no-scrollbar gap-1">
+                <button onclick="switchTab('pension')" id="tab-btn-pension" class="tab-btn flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-bold border-b-2 border-emerald-400 text-emerald-300 whitespace-nowrap transition">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    <span>1. 공무원연금 정밀 계산기</span>
+                </button>
+                <button onclick="switchTab('ktcu')" id="tab-btn-ktcu" class="tab-btn flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-300 hover:text-white whitespace-nowrap transition">
+                    <i data-lucide="piggy-bank" class="w-4 h-4"></i>
+                    <span>2. 교직원공제회 (장기저축 · 3대 연금화 상품)</span>
+                </button>
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-300 hover:text-white whitespace-nowrap transition">
+                    <i data-lucide="line-chart" class="w-4 h-4"></i>
+                    <span>3. 통합 현금흐름 &amp; 크레바스 비교</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 토스트 알림 박스 -->
+    <div id="toast-box" class="fixed bottom-5 right-5 z-50 hidden transition-all duration-300">
+        <div class="bg-navy-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 text-sm">
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400 shrink-0"></i>
+            <span id="toast-message">알림</span>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         모달 1: 법정 소득재분배 적용비율표 15구간 전체 보기
+    ====================================================================== -->
+    <div id="redistModal" class="fixed inset-0 z-50 hidden bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden border border-slate-200">
+            <div class="bg-indigo-950 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="table-2" class="w-5 h-5 text-emerald-400"></i>
+                    <div>
+                        <h2 class="text-base font-bold">공무원연금법 부칙 법정 소득재분배 적용비율표 (15구간)</h2>
+                        <p class="text-[11px] text-indigo-300">B값(상한 적용) ÷ A값 비율에 따라 현재 본인이 속한 구간이 자동 강조됩니다.</p>
+                    </div>
+                </div>
+                <button onclick="closeRedistModal()" class="text-slate-300 hover:text-white p-1.5 rounded-lg transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto">
+                <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-4 text-xs text-indigo-950 flex flex-wrap items-center justify-between gap-2 tabular-nums">
+                    <span>현재 본인 비율 (B/A): <strong id="modalCurrentRatio" class="text-indigo-700">0.0000</strong></span>
+                    <span>적용비율: <strong id="modalCurrentRate" class="text-emerald-700">100.00%</strong></span>
+                    <span>소득재분배반영 보수: <strong id="modalCurrentRedist" class="text-navy-900">0원</strong></span>
+                </div>
+                <table class="w-full text-left border-collapse text-xs sm:text-sm tabular-nums">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 border-y border-slate-200">
+                            <th class="py-2.5 px-3 font-bold">구간 번호</th>
+                            <th class="py-2.5 px-3 font-bold">B값 / A값 비율 구간</th>
+                            <th class="py-2.5 px-3 font-bold text-right">법정 적용비율 (%)</th>
+                            <th class="py-2.5 px-3 font-bold text-center">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="redistTableBody" class="divide-y divide-slate-100">
+                        <!-- JS 렌더링 -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end">
+                <button onclick="closeRedistModal()" class="bg-navy-900 hover:bg-navy-800 text-white text-sm font-bold px-5 py-2 rounded-xl transition">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         모달 2: 2026년 11월 최신 법령·금리 기준 안내
+    ====================================================================== -->
+    <div id="criteriaModal" class="fixed inset-0 z-50 hidden bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[88vh] flex flex-col overflow-hidden border border-slate-200">
+            <div class="bg-navy-900 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="scale" class="w-5 h-5 text-emerald-400"></i>
+                    <h2 class="text-base sm:text-lg font-bold">2026년 11월 최신 법령 · 공단 산식 · 공제회 금리 기준</h2>
+                </div>
+                <button onclick="closeCriteriaModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-5 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                    <h3 class="font-bold text-navy-900 text-sm flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                        1. 공무원연금공단 정밀 산식 (v2.1 1원 단위 검산)
+                    </h3>
+                    <ul class="list-disc list-inside space-y-1.5 text-slate-600">
+                        <li><strong>소득재분배반영 평균기준소득월액(B_redist):</strong> 상한(A×1.6) 적용된 B값에 B/A 비율 구간별 법정 적용비율(81.25%~300%)을 곱해 소수점 이하 절사합니다.</li>
+                        <li><strong>30년 한도 소득재분배 적용:</strong> 2016년 이후 재직기간 중 전체 재직기간 <strong>30년 한도 이내</strong> 구간은 <code>B_redist × 1.0% + B_capped × (r_y - 1.0%)</code>를 적용하며, <strong>30년 초과~36년 이하</strong> 구간은 소득재분배 없이 <code>B_capped × r_y</code>를 적용합니다.</li>
+                        <li><strong>3단계 차등 인하 지급률 (부칙 제13조):</strong> 2015년 이전 1.900% / 2016~2020년 매년 -0.022%p(1.878%→1.790%) / 2021~2025년 매년 -0.010%p(1.780%→1.740%) / 2026~2035년 매년 -0.004%p(1.736%→1.700%).</li>
+                        <li><strong>지급개시연령 (2026.10 헌재 합헌):</strong> 2016년 이후 임용 일괄 만 65세 / 1996~2015년 임용 퇴직연도별 단계(24~26: 62세, 27~29: 63세, 30~32: 64세, 33~: 65세) / 1995년 이전 임용 만 60세(경과조치).</li>
+                        <li><strong>퇴직수당 (법 제62조, 시행령 제58조):</strong> B값이 아닌 <strong>최종 기준소득월액</strong> 기준, 실재직 최대 <strong>33년</strong> 상한(군복무 소급산입 제외), 20년 이상 39.0% 지급률 적용.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 space-y-2">
+                    <h3 class="font-bold text-emerald-950 text-sm flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                        2. 한국교직원공제회 2026년 최신 금리 &amp; 3대 연금화 상품
+                    </h3>
+                    <ul class="list-disc list-inside space-y-1.5 text-slate-700">
+                        <li><strong>장기저축급여 적립 (2026.7.1):</strong> 연복리 <strong>5.00%</strong>, 월 50~2,500구좌(월 3만~150만 원, 1구좌=600원), 퇴직소득 저율과세.</li>
+                        <li><strong>상품 A · 장기저축급여 분할급여금:</strong> 연복리 <strong>5.00%</strong>, 5·10·15·20·25·30년, 세후 퇴직급여 전액(500만 원 이상) 전환 가능, <strong>저율과세(0~5%대) + 금융소득종합과세 제외</strong>.</li>
+                        <li><strong>상품 B · 퇴직생활급여 확정연금형:</strong> 연복리 <strong>5.00%</strong>, 5·10·15·20년(25·30년 불가), 최대 <strong>60구좌(3억 원)</strong> 한도, 이자소득세 15.4% + 금융소득종합과세 대상.</li>
+                        <li><strong>상품 C · 퇴직생활급여 부가금형 (2026.10.20):</strong> 매월 지급 연 <strong>4.12%</strong> / 매년 지급 연 <strong>4.20%</strong>, 확정연금형 합산 총 <strong>100구좌(5억 원)</strong> 한도, 원금 보존, 이자소득세 15.4% + 종합과세 대상.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex justify-end">
+                <button onclick="closeCriteriaModal()" class="bg-navy-900 hover:bg-navy-800 text-white text-sm font-bold px-5 py-2 rounded-xl transition">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         메인 컨텐츠 영역
+    ====================================================================== -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+        <!-- =================================================================
+             TAB 1: 공무원연금 정밀 계산기
+        ================================================================== -->
+        <section id="panel-pension" class="tab-panel active space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                <!-- 좌측 입력 패널 (7 cols) -->
+                <div class="lg:col-span-7 space-y-5">
+
+                    <!-- 카드 1-1: 기본 정보 & 재직기간 분리 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 sm:p-6 space-y-5">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                            <h2 class="text-base font-extrabold text-navy-900 flex items-center gap-2">
+                                <span class="w-2 h-5 bg-indigo-600 rounded-full"></span>
+                                1. 기본 정보 · 개시연령 · 재직기간 분리
+                            </h2>
+                            <span id="pensionAgeRuleBadge" class="text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-full">
+                                2026.10 헌재 합헌 · 만 65세 확정
+                            </span>
+                        </div>
+
+                        <!-- 출생연도 / 임용연도 / 퇴직예정연도 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1.5">출생연도</label>
+                                <input type="number" id="birthYear" value="1989" min="1950" max="2010" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1.5">최초 임용연도</label>
+                                <input type="number" id="appointYear" value="2016" min="1975" max="2045" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label class="text-xs font-bold text-slate-600">퇴직예정연도</label>
+                                    <span id="autoRetireAgeBadge" class="text-xs font-extrabold text-indigo-700 tabular-nums">만 61세 퇴직</span>
+                                </div>
+                                <input type="number" id="retireYear" value="2050" min="2020" max="2075" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                            </div>
+                        </div>
+
+                        <!-- 법정 개시연령 자동 판별 박스 -->
+                        <div class="bg-indigo-50/70 border border-indigo-200/80 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="space-y-0.5">
+                                <div class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                                    <i data-lucide="calendar-clock" class="w-4 h-4 text-indigo-700"></i>
+                                    법정 지급개시연령 (임용연도 · 퇴직연도 기준)
+                                </div>
+                                <p id="startAgeReasonText" class="text-[11px] text-indigo-800">2016년 이후 임용자는 퇴직연도 무관 일괄 만 65세 개시 (2026.10 헌재 합헌 확정)</p>
+                            </div>
+                            <span id="baseStartAgeDisplay" class="shrink-0 bg-indigo-700 text-white text-sm font-extrabold px-3.5 py-1.5 rounded-xl tabular-nums shadow-sm">
+                                만 65세 개시
+                            </span>
+                        </div>
+
+                        <!-- 군복무 소급산입 & 재직기간 분리 요약 -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3.5">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">군복무 소급산입 기간 (0~36개월)</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="number" id="militaryMonths" value="0" min="0" max="36" oninput="recalculateAll()" class="w-24 bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-bold text-right text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                        <span class="text-xs font-semibold text-slate-600">개월</span>
+                                        <div class="flex gap-1 ml-auto">
+                                            <button type="button" onclick="setMilitary(0)" class="text-[11px] bg-white hover:bg-slate-200 border border-slate-300 px-2 py-1 rounded font-semibold">0</button>
+                                            <button type="button" onclick="setMilitary(18)" class="text-[11px] bg-white hover:bg-slate-200 border border-slate-300 px-2 py-1 rounded font-semibold">18m</button>
+                                            <button type="button" onclick="setMilitary(24)" class="text-[11px] bg-white hover:bg-slate-200 border border-slate-300 px-2 py-1 rounded font-semibold">24m</button>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10.5px] text-slate-500 mt-1">※ 퇴직연금(상한 36년)에만 합산 · 퇴직수당(상한 33년) 자동 제외</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">2016년 이전 / 이후 실재직 자동 산출</label>
+                                    <div class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs flex items-center justify-between tabular-nums">
+                                        <span class="text-slate-600">2016 이전: <strong id="pre2016YearsText" class="text-indigo-700">0년</strong></span>
+                                        <span class="text-slate-300">|</span>
+                                        <span class="text-slate-600">2016 이후: <strong id="post2016YearsText" class="text-emerald-700">34년</strong></span>
+                                    </div>
+                                    <p class="text-[10.5px] text-slate-500 mt-1">※ 임용연도 &lt; 2016이면 이전 기간 연 1.900% 자동 반영</p>
+                                </div>
+                            </div>
+
+                            <!-- 연금 vs 퇴직수당 인정기간 분리 카드 -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+                                <div class="bg-white rounded-xl p-3 border border-indigo-200/80">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="font-bold text-indigo-950">퇴직연금 인정 재직기간</span>
+                                        <span class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-semibold">상한 36년</span>
+                                    </div>
+                                    <div class="flex items-baseline justify-between mt-1.5 tabular-nums">
+                                        <span id="pensionYearsDisplay" class="text-lg font-extrabold text-indigo-800">34년 0개월</span>
+                                        <span id="pensionYearsCapNote" class="text-[11px] font-semibold text-slate-500">30년 한도 + 초과 4년</span>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-xl p-3 border border-emerald-200/80">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="font-bold text-emerald-950">퇴직수당 인정 재직기간</span>
+                                        <span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-semibold">군복무 제외·33년</span>
+                                    </div>
+                                    <div class="flex items-baseline justify-between mt-1.5 tabular-nums">
+                                        <span id="severanceYearsDisplay" class="text-lg font-extrabold text-emerald-800">33년 0개월</span>
+                                        <span id="severanceYearsCapNote" class="text-[11px] font-semibold text-amber-600">시행령 제58조 상한</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 카드 1-2: 3대 소득 입력 항목 명확히 분리 (1원 단위 정밀 입력) -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 sm:p-6 space-y-5">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                            <h2 class="text-base font-extrabold text-navy-900 flex items-center gap-2">
+                                <span class="w-2 h-5 bg-emerald-600 rounded-full"></span>
+                                2. 기준소득월액 3대 항목 분리 입력 (1원 단위)
+                            </h2>
+                            <span class="text-[11px] font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md">공단 '적용보수' 화면 그대로 입력 가능</span>
+                        </div>
+
+                        <!-- A값 입력 + 원클릭 프리셋 -->
+                        <div class="space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <label class="text-xs font-bold text-slate-800">
+                                    ① A값 <span class="font-medium text-slate-500">(퇴직 전 3년간 전체 공무원 기준소득월액 평균액)</span>
+                                </label>
+                                <span id="valAManwonHint" class="text-xs font-extrabold text-indigo-700 tabular-nums">571.0만 원</span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <div class="relative flex-1">
+                                    <input type="number" id="valAInput" value="5710000" min="2000000" max="15000000" step="10000" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-9 text-sm font-extrabold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                    <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">원</span>
+                                </div>
+                                <div class="flex gap-1.5 shrink-0">
+                                    <button type="button" onclick="setValA(5710000)" id="presetA571" class="text-[11px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-2 rounded-xl transition">
+                                        2025~26 공단 참고치 571만
+                                    </button>
+                                    <button type="button" onclick="setValA(5950000)" id="presetA595" class="text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-2 rounded-xl transition">
+                                        2026 인사처 고시 595만
+                                    </button>
+                                </div>
+                            </div>
+                            <p id="valBCapHint" class="text-[11px] text-slate-500 tabular-nums">
+                                개인 기준소득월액 법정 상한선 (A값 × 1.6배): <strong>9,136,000원</strong>
+                            </p>
+                        </div>
+
+                        <!-- B값 입력 + 상한 캡 알림 + 나이스 일반기여금 역산 도우미 -->
+                        <div class="space-y-2.5 pt-3 border-t border-slate-100">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <label class="text-xs font-bold text-slate-800">
+                                    ② B값 <span class="font-medium text-slate-500">(공단 '개인 평균기준소득월액' 값)</span>
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <span id="valBCapWarning" class="hidden text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">상한(1.6×A) 자동 적용됨</span>
+                                    <span id="valBManwonHint" class="text-xs font-extrabold text-emerald-700 tabular-nums">550.0만 원</span>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <input type="number" id="valBInput" value="5500000" min="1500000" max="15000000" step="10000" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-9 text-sm font-extrabold text-emerald-800 tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-600">
+                                <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">원</span>
+                            </div>
+
+                            <!-- 접고 펼칠 수 있는 나이스 급여명세서 일반기여금 역산 보조 도구 -->
+                            <details class="group bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+                                <summary class="cursor-pointer px-3.5 py-2.5 text-xs font-bold text-indigo-800 flex items-center justify-between select-none hover:bg-indigo-50/50 transition">
+                                    <span class="flex items-center gap-1.5">
+                                        <i data-lucide="calculator" class="w-3.5 h-3.5 text-indigo-600"></i>
+                                        나이스 급여명세서 '일반기여금'으로 올해 기준소득월액 역산하기
+                                    </span>
+                                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                                </summary>
+                                <div class="px-3.5 pb-3.5 pt-2 border-t border-slate-200 bg-white space-y-2.5">
+                                    <p class="text-[11px] text-slate-500">공무원 기여금 징수율(9%)을 역산합니다: <code>올해 기준소득월액 = 월 일반기여금 ÷ 0.09</code></p>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                        <div class="relative flex-1">
+                                            <input type="number" id="neisContribInput" placeholder="예: 478950" oninput="calcNeisReverse()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 pr-14 text-xs font-bold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            <span class="absolute right-3 top-2 text-[11px] font-semibold text-slate-500">원/월</span>
+                                        </div>
+                                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2 text-xs font-extrabold text-indigo-900 tabular-nums text-center shrink-0">
+                                            역산 결과: <span id="neisReverseResult">0원</span>
+                                        </div>
+                                        <button type="button" onclick="applyNeisToFinal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shrink-0">
+                                            최종 기준소득월액에 복사
+                                        </button>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+
+                        <!-- 최종 기준소득월액 (퇴직수당 전용) -->
+                        <div class="space-y-2 pt-3 border-t border-slate-100">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <label class="text-xs font-bold text-slate-800">
+                                    ③ 최종 기준소득월액 <span class="font-medium text-rose-600">(퇴직수당 산정 전용 · 공단 '퇴직수당 적용보수')</span>
+                                </label>
+                                <span id="finalIncomeManwonHint" class="text-xs font-extrabold text-slate-700 tabular-nums">650.0만 원</span>
+                            </div>
+                            <div class="relative">
+                                <input type="number" id="finalIncomeInput" value="6500000" min="1500000" max="15000000" step="10000" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-9 text-sm font-extrabold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">원</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500">※ B값과 완전히 분리되어 <strong>퇴직수당 일시금</strong> 계산에만 사용됩니다 (최종 기준소득월액 × 인정연수[최대 33년] × 지급률).</p>
+                        </div>
+                    </div>
+
+                    <!-- 카드 1-3: 조기퇴직연금 & 퇴직 후 소득활동 지급정지 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 sm:p-6 space-y-5">
+                        <h2 class="text-base font-extrabold text-navy-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <span class="w-2 h-5 bg-amber-500 rounded-full"></span>
+                            3. 조기퇴직연금 &amp; 퇴직 후 소득활동 지급정지
+                        </h2>
+
+                        <!-- 조기퇴직연금 -->
+                        <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <label class="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                                    <i data-lucide="fast-forward" class="w-4 h-4 text-amber-600"></i>
+                                    조기퇴직연금 시뮬레이션 (연 5% 평생 감액)
+                                </label>
+                                <span id="earlyStatusBadge" class="text-xs font-extrabold text-amber-900 bg-white border border-amber-300 px-2.5 py-0.5 rounded-full">정상 수령 (감액 0%)</span>
+                            </div>
+                            <input type="range" id="earlyYearsSlider" value="0" min="0" max="5" step="1" oninput="recalculateAll()" class="w-full indigo-slider">
+                            <div class="flex justify-between text-[11px] font-semibold text-amber-900/75 tabular-nums">
+                                <span>0년 (정상)</span>
+                                <span>1년 (-5%)</span>
+                                <span>2년 (-10%)</span>
+                                <span>3년 (-15%)</span>
+                                <span>4년 (-20%)</span>
+                                <span>5년 (-25%)</span>
+                            </div>
+                            <div id="earlyAnalysisRow" class="hidden pt-2 border-t border-amber-200 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <div class="bg-white rounded-lg p-2.5 border border-amber-200 flex justify-between items-center">
+                                    <span class="text-slate-600">정상 대비 월 감액액</span>
+                                    <span id="earlyMonthlyDiffText" class="font-extrabold text-rose-600 tabular-nums">-0원/월</span>
+                                </div>
+                                <div class="bg-white rounded-lg p-2.5 border border-amber-200 flex justify-between items-center">
+                                    <span class="text-slate-600">누적 수령 손익분기 연령</span>
+                                    <span id="earlyBreakEvenAgeText" class="font-extrabold text-navy-900 tabular-nums">만 84세</span>
+                                </div>
+                            </div>
+                            <p id="earlyClampNotice" class="hidden text-[11px] text-amber-800 font-semibold"></p>
+                        </div>
+
+                        <!-- 퇴직 후 소득활동 지급정지 -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-800 block">퇴직 후 예상 월 근로·사업소득 (선택)</label>
+                                    <span class="text-[11px] text-slate-500">전년도 평균연금월액(280만 원) 초과 시 5구간 30~70% 누진 정지 (연금 50% 상한)</span>
+                                </div>
+                                <div class="relative w-32">
+                                    <input type="number" id="postWorkIncomeInput" value="0" min="0" max="2000" step="10" oninput="recalculateAll()" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 pr-11 text-right text-sm font-bold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                    <span class="absolute right-3 top-2 text-xs font-semibold text-slate-500">만원</span>
+                                </div>
+                            </div>
+                            <div id="suspensionResultBox" class="hidden bg-rose-50 border border-rose-200 rounded-lg p-3 text-xs space-y-1.5 tabular-nums">
+                                <div class="flex justify-between">
+                                    <span class="text-rose-800">초과소득월액 (소득 - 280만 원)</span>
+                                    <span id="suspExcessText" class="font-bold text-rose-900">0만 원</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-rose-800">월 연금 지급정지액 (최대 연금 50% 한도)</span>
+                                    <span id="suspDeductionText" class="font-extrabold text-rose-600">-0원</span>
+                                </div>
+                                <div class="flex justify-between pt-1.5 border-t border-rose-200">
+                                    <span class="font-bold text-slate-800">지급정지 반영 후 세전 월연금</span>
+                                    <span id="suspAfterMonthlyText" class="font-extrabold text-navy-900">0원</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 우측 결과 패널 (5 cols, Sticky) -->
+                <div class="lg:col-span-5 space-y-5 lg:sticky lg:top-32">
+
+                    <!-- [v2.1 핵심] 실시간 소득재분배 1원 단위 검산 카드 -->
+                    <div class="bg-white rounded-2xl shadow-md border-2 border-indigo-500/80 p-5 space-y-3.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-indigo-600 text-white text-[10.5px] font-extrabold px-2 py-0.5 rounded-md">v2.1 1원 단위 검산</span>
+                                <h3 class="text-sm font-extrabold text-navy-900">소득재분배 실시간 검산</h3>
+                            </div>
+                            <button onclick="openRedistModal()" class="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 underline underline-offset-2 flex items-center gap-1">
+                                <span>15구간 표 보기</span>
+                                <i data-lucide="external-link" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 text-center tabular-nums">
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                                <div class="text-[10.5px] font-semibold text-slate-500">B / A 비율</div>
+                                <div id="verifyRatio" class="text-sm sm:text-base font-extrabold text-navy-900 mt-0.5">0.9632</div>
+                            </div>
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                                <div class="text-[10.5px] font-semibold text-slate-500">해당 구간</div>
+                                <div id="verifyBracket" class="text-xs sm:text-sm font-extrabold text-indigo-700 mt-1">0.9 ~ 1.0</div>
+                            </div>
+                            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+                                <div class="text-[10.5px] font-semibold text-emerald-700">법정 적용비율</div>
+                                <div id="verifyRatePct" class="text-sm sm:text-base font-extrabold text-emerald-700 mt-0.5">105.56%</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-indigo-950 text-white rounded-xl p-3.5 flex items-center justify-between gap-2">
+                            <div>
+                                <div class="text-[11px] text-indigo-300 font-semibold">소득재분배반영 평균기준소득월액 (B_redist)</div>
+                                <div class="text-[10.5px] text-slate-400">공단 조회 화면의 '2016년이후 소득재분배반영'과 대조</div>
+                            </div>
+                            <div id="verifyRedistWon" class="text-lg sm:text-xl font-extrabold text-emerald-300 tabular-nums shrink-0">
+                                5,805,800원
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 핵심 결과 카드: 공무원연금 월액 -->
+                    <div class="bg-gradient-to-br from-navy-950 via-navy-900 to-indigo-950 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                        <div class="absolute -right-10 -top-10 w-44 h-44 bg-emerald-500/15 rounded-full blur-3xl"></div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">예상 공무원 퇴직연금 (월액 · 10원 미만 절사)</span>
+                            <span id="resActualStartAgeBadge" class="text-xs bg-white/10 border border-white/15 px-2.5 py-1 rounded-full font-bold tabular-nums">만 65세 개시</span>
+                        </div>
+
+                        <div id="min10YrWarning" class="hidden mt-3 bg-rose-500/20 border border-rose-400/50 rounded-xl p-3 text-xs text-rose-200 font-semibold">
+                            ⚠️ 인정 재직기간이 10년 미만이면 매월 연금 대신 퇴직일시금 대상입니다.
+                        </div>
+
+                        <div class="flex items-baseline gap-1.5 mt-4 mb-1">
+                            <span class="text-sm font-medium text-slate-300">세전 월</span>
+                            <span id="resPensionGrossWon" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white tabular-nums">0원</span>
+                        </div>
+                        <p id="resPensionSummarySub" class="text-xs text-emerald-300 font-semibold tabular-nums">약 0.0만 원 · 추정 세후 월 0원 (연금소득세 약 0원)</p>
+
+                        <!-- 30년 한도 및 지급률 상세 내역 -->
+                        <div class="mt-5 pt-4 border-t border-slate-700/80 space-y-2 text-xs tabular-nums">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-300">총 누적 지급률 합계</span>
+                                <span id="resRateSumText" class="font-extrabold text-emerald-300">0.000%</span>
+                            </div>
+                            <div class="bg-white/5 rounded-xl p-3 space-y-1.5 border border-white/10 text-[11.5px]">
+                                <div class="text-[11px] font-bold text-indigo-300 mb-1">구간별 산출 내역 (감액·지급정지 전 기준)</div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">① 2016 이전 재직 (1.900%)</span>
+                                    <span id="resBreakPre2016" class="font-semibold text-slate-200">0원 (0.000%)</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">② 2016 이후 · 30년 이내 (소득재분배 적용)</span>
+                                    <span id="resBreakWithin30" class="font-semibold text-emerald-300">0원 (0.000%)</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">③ 30년 초과 ~ 36년 (소득재분배 미적용)</span>
+                                    <span id="resBreakOver30" class="font-semibold text-sky-300">0원 (0.000%)</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center pt-1">
+                                <span class="text-slate-300">추정 세후 월 실수령액 (감액·정지 반영)</span>
+                                <span id="resPensionNetWon" class="text-base font-extrabold text-amber-300">월 0원</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 퇴직수당 (일시금) 카드 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="bg-emerald-50 p-2 rounded-xl text-emerald-700 border border-emerald-200">
+                                    <i data-lucide="briefcase" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-extrabold text-slate-900">공무원 퇴직수당 (퇴직 시 일시금)</h3>
+                                    <p id="resSevYearsSub" class="text-[11px] text-slate-500">최종 기준소득월액 기준 · 군복무 제외 33년</p>
+                                </div>
+                            </div>
+                            <span id="resSevRateBadge" class="text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg">39.0%</span>
+                        </div>
+
+                        <div class="bg-slate-50 rounded-xl p-4 space-y-2 border border-slate-200/70 tabular-nums">
+                            <div class="flex items-baseline justify-between">
+                                <span class="text-xs font-semibold text-slate-600">세전 퇴직수당 일시금</span>
+                                <span id="resSevGross" class="text-xl font-extrabold text-navy-900">0원</span>
+                            </div>
+                            <div class="flex items-baseline justify-between pt-2 border-t border-slate-200 text-xs">
+                                <span class="text-slate-500">퇴직소득세 추정 차감 후 세후</span>
+                                <span id="resSevNet" class="font-extrabold text-emerald-700">약 0만 원</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="switchTab('ktcu')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm py-3.5 px-5 rounded-xl flex items-center justify-between transition shadow-md group">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="piggy-bank" class="w-4 h-4"></i>
+                            2단계: 교직원공제회 3대 연금화 상품 설계하기
+                        </span>
+                        <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             TAB 2: 한국교직원공제회 (2026 최신 금리 & 3대 상품 완전 분리)
+        ================================================================== -->
+        <section id="panel-ktcu" class="tab-panel space-y-6">
+
+            <!-- 섹션 2-1: 장기저축급여 적립 시뮬레이터 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 sm:p-6 space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <h2 class="text-base font-extrabold text-navy-900 flex items-center gap-2">
+                            <span class="w-2 h-5 bg-emerald-600 rounded-full"></span>
+                            1. 장기저축급여 적립 시뮬레이터
+                        </h2>
+                        <span class="text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full">2026.7.1 연복리 5.00% · 50~2,500구좌</span>
+                    </div>
+
+                    <!-- 현재 누적 적립금 & 기가입 연수 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">현재 누적 적립금 (원금+부가금)</label>
+                            <div class="relative">
+                                <input type="number" id="ktcuCurrentBal" value="3000" min="0" max="100000" step="100" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-12 text-sm font-bold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-600">
+                                <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">만원</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">기가입 연수 <span class="font-normal text-slate-400">(퇴직소득세 근속공제 반영)</span></label>
+                            <div class="relative">
+                                <input type="number" id="ktcuPastYears" value="5" min="0" max="40" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-9 text-sm font-bold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-600">
+                                <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">년</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 월 납입 구좌수 (50~2,500구좌, 1구좌=600원) -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <label class="text-xs font-bold text-slate-800 block">월 납입 구좌수 (1구좌 = 600원 · 월 3만~150만 원)</label>
+                                <span id="ktcuUnitsMoneyText" class="text-sm font-extrabold text-emerald-700 tabular-nums">1,000구좌 = 월 60만 원</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <input type="number" id="ktcuUnitsInput" value="1000" min="50" max="2500" step="10" oninput="syncSlider('ktcuUnitsSlider', Math.min(2500, Math.max(50, this.value))); recalculateAll()" class="w-24 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-right text-sm font-bold text-emerald-800 tabular-nums">
+                                <span class="text-xs font-bold text-slate-600">구좌</span>
+                            </div>
+                        </div>
+                        <input type="range" id="ktcuUnitsSlider" value="1000" min="50" max="2500" step="10" oninput="syncInput('ktcuUnitsInput', this.value); recalculateAll()" class="w-full">
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <button type="button" onclick="setKtcuUnits(500)" class="text-[11px] bg-white hover:bg-emerald-50 border border-slate-300 px-2.5 py-1 rounded-lg font-semibold">500구좌 (30만)</button>
+                            <button type="button" onclick="setKtcuUnits(1000)" class="text-[11px] bg-white hover:bg-emerald-50 border border-slate-300 px-2.5 py-1 rounded-lg font-semibold">1,000구좌 (60만)</button>
+                            <button type="button" onclick="setKtcuUnits(1500)" class="text-[11px] bg-white hover:bg-emerald-50 border border-slate-300 px-2.5 py-1 rounded-lg font-semibold">1,500구좌 (90만)</button>
+                            <button type="button" onclick="setKtcuUnits(2000)" class="text-[11px] bg-white hover:bg-emerald-50 border border-slate-300 px-2.5 py-1 rounded-lg font-semibold">2,000구좌 (120만)</button>
+                            <button type="button" onclick="setKtcuUnits(2500)" class="text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-bold shadow-sm">2,500구좌 (150만)</button>
+                        </div>
+                    </div>
+
+                    <!-- 적용 급여율 & 잔여 납입 연수 (탭 1 자동 연동) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">장기저축급여 적용 급여율 (연복리)</label>
+                            <div class="relative">
+                                <input type="number" id="ktcuAccumRate" value="5.00" min="1.0" max="10.0" step="0.05" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-9 text-sm font-extrabold text-emerald-700 tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-600">
+                                <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="text-xs font-bold text-slate-700">잔여 납입 연수</label>
+                                <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                                    <input type="checkbox" id="ktcuSyncRetire" checked onchange="recalculateAll()" class="w-3.5 h-3.5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <span class="text-[11px] font-bold text-emerald-700">탭1 퇴직연도 연동</span>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="number" id="ktcuRemainYears" value="24" min="0" max="45" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-9 text-sm font-bold text-slate-900 tabular-nums disabled:bg-slate-200/70 disabled:text-slate-600">
+                                <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">년</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 우측 장기저축급여 예상 수령액 카드 (5 cols) -->
+                <div class="lg:col-span-5 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-900 text-white rounded-2xl p-6 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-300">퇴직 시 장기저축급여 예상 급여금</span>
+                        <span id="resKtcuTotalYearsBadge" class="text-xs bg-white/10 px-2.5 py-1 rounded-full font-semibold tabular-nums">총 29년 가입</span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-emerald-200/80 mb-1">저율과세 적용 추정 세후 실수령액 (일시금)</div>
+                        <div class="flex items-baseline gap-1.5">
+                            <span id="resKtcuAfterTax" class="text-4xl font-extrabold tracking-tight text-white tabular-nums">0</span>
+                            <span class="text-lg font-bold text-emerald-300">만원</span>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-white/15 space-y-2 text-xs tabular-nums">
+                        <div class="flex justify-between">
+                            <span class="text-emerald-200/80">총 납입원금 (현재 적립금 + 신규 납입)</span>
+                            <span id="resKtcuPrincipal" class="font-bold text-white">0만원</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-emerald-200/80">총 예상 부가금 (연복리 이자)</span>
+                            <span id="resKtcuInterest" class="font-bold text-emerald-300">+0만원</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-emerald-200/80">세전 예상 급여금 합계</span>
+                            <span id="resKtcuGross" class="font-bold text-white">0만원</span>
+                        </div>
+                        <div class="flex justify-between pt-2 border-t border-white/15">
+                            <span class="text-amber-200">퇴직소득 저율과세 추정 <span id="resKtcuEffTaxRate">(0.0%)</span></span>
+                            <span id="resKtcuTax" class="font-bold text-amber-300">-0만원</span>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-emerald-200/75 leading-relaxed">
+                        ※ 소득세법상 근속연수공제·환산급여공제를 적용한 추정 세후액입니다. 아래 <strong>상품 A(분할급여금)</strong> 전환 시 세후 퇴직급여금 전액(500만 원 이상)을 저율과세로 연금화할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 섹션 2-2: 3대 퇴직 후 연금화 상품 완전 분리 설계 -->
+            <div class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-base sm:text-lg font-extrabold text-navy-900 flex items-center gap-2">
+                            <span class="w-2 h-5 bg-navy-900 rounded-full"></span>
+                            2. 퇴직 후 3대 연금화 상품 완전 분리 비교 &amp; 선택 (탭 3 현금흐름 연동)
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">각 상품의 체크박스를 켜고 끄며 세금(저율과세 vs 15.4% 종합과세)·한도·현금흐름을 비교해 보세요.</p>
+                    </div>
+                    <!-- 금융소득종합과세 자동 경보 배지 -->
+                    <div id="comprehensiveTaxWarning" class="hidden bg-rose-50 border-2 border-rose-400 text-rose-700 text-xs font-extrabold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+                        <span id="comprehensiveTaxMsg">퇴직생활급여 연간 이자소득 2,000만 원 초과 (금융소득종합과세 경보!)</span>
+                    </div>
+                </div>
+
+                <!-- 3개 상품 독립 카드 -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+                    <!-- 상품 A: 장기저축급여 분할급여금 -->
+                    <div class="bg-white rounded-2xl shadow-sm border-2 border-emerald-500/80 p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-4">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                                        <span class="text-[10.5px] font-extrabold bg-emerald-600 text-white px-2 py-0.5 rounded-md">상품 A · 저율과세</span>
+                                        <span class="text-[10.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md">금융소득종합과세 제외</span>
+                                    </div>
+                                    <h3 class="text-base font-extrabold text-navy-900">장기저축급여 분할급여금</h3>
+                                </div>
+                                <label class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 cursor-pointer shrink-0">
+                                    <input type="checkbox" id="useSplitProduct" checked onchange="recalculateAll()" class="w-4 h-4 text-emerald-600 rounded">
+                                    <span>반영</span>
+                                </label>
+                            </div>
+
+                            <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 text-[11px] text-emerald-900 leading-relaxed">
+                                연복리 <strong>5.00%</strong> · 기간 <strong>5·10·15·20·25·30년</strong> · 퇴직급여 전액(500만 원 이상) 전환 가능. 이자 부가금도 저율과세(0~5%대) 적용.
+                            </div>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                                        <span>세후 퇴직급여금 전환 비율</span>
+                                        <span id="splitRatioText" class="text-emerald-700 tabular-nums">100% (0만원)</span>
+                                    </div>
+                                    <input type="range" id="splitRatioSlider" value="100" min="0" max="100" step="5" oninput="recalculateAll()" class="w-full">
+                                    <p id="splitMinWarning" class="hidden text-[11px] font-bold text-rose-600 mt-1">⚠️ 최소 전환 금액은 500만 원 이상입니다.</p>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label class="block text-[10.5px] font-bold text-slate-600 mb-1">기간(5~30년)</label>
+                                        <select id="splitYears" onchange="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs font-bold text-slate-900">
+                                            <option value="5">5년</option>
+                                            <option value="10" selected>10년</option>
+                                            <option value="15">15년</option>
+                                            <option value="20">20년</option>
+                                            <option value="25">25년</option>
+                                            <option value="30">30년</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10.5px] font-bold text-slate-600 mb-1">급여율(%)</label>
+                                        <input type="number" id="splitRate" value="5.00" min="1" max="10" step="0.05" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs font-bold text-emerald-700 tabular-nums">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10.5px] font-bold text-slate-600 mb-1">저율과세(%)</label>
+                                        <input type="number" id="splitTaxRateInput" value="3.3" min="0" max="10" step="0.1" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs font-bold text-indigo-700 tabular-nums" title="분할급여금 이자 부가금 추정 저율과세율(0~5%대)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-950 text-white rounded-xl p-4 space-y-1.5 tabular-nums">
+                            <div class="flex justify-between items-center text-[11px] text-emerald-300">
+                                <span>월 세전 수령액</span>
+                                <span id="resSplitGrossMonthly" class="font-bold">월 0.0만원</span>
+                            </div>
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-xs font-bold text-white">월 세후 실수령액</span>
+                                <span id="resSplitNetMonthly" class="text-2xl font-extrabold text-emerald-300">월 0.0만원</span>
+                            </div>
+                            <div class="text-[10.5px] text-emerald-200/80 text-right" id="resSplitTaxInfo">이자분 저율과세 3.3% 적용 · 종합과세 제외</div>
+                        </div>
+                    </div>
+
+                    <!-- 상품 B: 퇴직생활급여 확정연금형 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-4">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                                        <span class="text-[10.5px] font-extrabold bg-teal-600 text-white px-2 py-0.5 rounded-md">상품 B · 15.4% 과세</span>
+                                        <span class="text-[10.5px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-md">종합과세 대상</span>
+                                    </div>
+                                    <h3 class="text-base font-extrabold text-navy-900">퇴직생활급여 (확정연금형)</h3>
+                                </div>
+                                <label class="flex items-center gap-1.5 text-xs font-bold text-teal-700 cursor-pointer shrink-0">
+                                    <input type="checkbox" id="useFixedProduct" checked onchange="recalculateAll()" class="w-4 h-4 text-teal-600 rounded">
+                                    <span>반영</span>
+                                </label>
+                            </div>
+
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-[11px] text-slate-700 leading-relaxed">
+                                연복리 <strong>5.00%</strong> · 기간 <strong>5·10·15·20년</strong> (25·30년 불가) · 최대 <strong>60구좌(3억 원)</strong> 한도 자동 검증 · 이자소득세 15.4%.
+                            </div>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+                                        <span>가입 금액 (최대 3억 / 60구좌)</span>
+                                        <span id="fixedUnitsLabel" class="text-teal-700 tabular-nums">10구좌 (5,000만원)</span>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="number" id="fixedDepositInput" value="5000" min="0" max="30000" step="500" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 pr-12 text-sm font-bold text-slate-900 tabular-nums">
+                                        <span class="absolute right-3 top-2 text-xs font-bold text-slate-500">만원</span>
+                                    </div>
+                                    <p id="fixedCapWarning" class="hidden text-[11px] font-bold text-rose-600 mt-1">⚠️ 확정연금형 법정 최대 한도(3억 원 · 60구좌)가 자동 적용되었습니다.</p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">지급기간 (25·30년 불가)</label>
+                                        <select id="fixedYears" onchange="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold text-slate-900">
+                                            <option value="5" selected>5년 분할</option>
+                                            <option value="10">10년 분할</option>
+                                            <option value="15">15년 분할</option>
+                                            <option value="20">20년 분할</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">적용 급여율 (%)</label>
+                                        <input type="number" id="fixedRate" value="5.00" min="1" max="10" step="0.05" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold text-teal-700 tabular-nums">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 text-white rounded-xl p-4 space-y-1.5 tabular-nums">
+                            <div class="flex justify-between items-center text-[11px] text-slate-300">
+                                <span>월 세전 수령액</span>
+                                <span id="resFixedGrossMonthly" class="font-bold">월 0.0만원</span>
+                            </div>
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-xs font-bold text-white">월 세후 실수령액</span>
+                                <span id="resFixedNetMonthly" class="text-2xl font-extrabold text-teal-300">월 0.0만원</span>
+                            </div>
+                            <div class="text-[10.5px] text-slate-400 text-right" id="resFixedTaxInfo">이자 15.4% 과세 (월 세금 약 0만원)</div>
+                        </div>
+                    </div>
+
+                    <!-- 상품 C: 퇴직생활급여 부가금형 (이자지급식) -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-4">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                                        <span class="text-[10.5px] font-extrabold bg-sky-600 text-white px-2 py-0.5 rounded-md">상품 C · 원금보존</span>
+                                        <span class="text-[10.5px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-md">종합과세 대상</span>
+                                    </div>
+                                    <h3 class="text-base font-extrabold text-navy-900">퇴직생활급여 (부가금형)</h3>
+                                </div>
+                                <label class="flex items-center gap-1.5 text-xs font-bold text-sky-700 cursor-pointer shrink-0">
+                                    <input type="checkbox" id="useBugaProduct" checked onchange="recalculateAll()" class="w-4 h-4 text-sky-600 rounded">
+                                    <span>반영</span>
+                                </label>
+                            </div>
+
+                            <div class="bg-sky-50/70 border border-sky-200 rounded-xl p-2.5 text-[11px] text-sky-950 leading-relaxed">
+                                <strong>2026.10.20 인상:</strong> 월지급 연 <strong>4.12%</strong> / 연지급 연 <strong>4.20%</strong> · 확정형 합산 총 <strong>100구좌(5억 원)</strong> 한도 · 원금 보존.
+                            </div>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+                                        <span>가입 금액 <span id="bugaRemainCapLabel" class="text-sky-700">(잔여한도 4.5억)</span></span>
+                                        <span id="bugaUnitsLabel" class="text-sky-700 tabular-nums">6구좌 (3,000만원)</span>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="number" id="bugaDepositInput" value="3000" min="0" max="50000" step="500" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 pr-12 text-sm font-bold text-slate-900 tabular-nums">
+                                        <span class="absolute right-3 top-2 text-xs font-bold text-slate-500">만원</span>
+                                    </div>
+                                    <p id="bugaCapWarning" class="hidden text-[11px] font-bold text-rose-600 mt-1">⚠️ 확정연금형 합산 총 5억 원(100구좌) 한도가 자동 적용되었습니다.</p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">이자 지급 주기</label>
+                                        <select id="bugaCycle" onchange="onBugaCycleChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold text-slate-900">
+                                            <option value="monthly" selected>매월 지급 (4.12%)</option>
+                                            <option value="yearly">매년 지급 (4.20%)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">적용 이자율 (%)</label>
+                                        <input type="number" id="bugaRate" value="4.12" min="1" max="10" step="0.02" oninput="recalculateAll()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold text-sky-700 tabular-nums">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-sky-950 text-white rounded-xl p-4 space-y-1.5 tabular-nums">
+                            <div class="flex justify-between items-center text-[11px] text-sky-300">
+                                <span>월 환산 세전 이자</span>
+                                <span id="resBugaGrossMonthly" class="font-bold">월 0.0만원</span>
+                            </div>
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-xs font-bold text-white">월 환산 세후 이자</span>
+                                <span id="resBugaNetMonthly" class="text-2xl font-extrabold text-sky-300">월 0.0만원</span>
+                            </div>
+                            <div class="text-[10.5px] text-sky-200/80 text-right" id="resBugaTaxInfo">15.4% 과세 (연 세후 0만원 · 원금보존)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3대 상품 나란히 비교표 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 sm:p-6 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="text-sm sm:text-base font-extrabold text-navy-900">교직원공제회 3대 연금화 상품 나란히 비교표</h3>
+                        <button onclick="switchTab('dashboard')" class="text-xs font-bold bg-navy-900 hover:bg-navy-800 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition">
+                            <span>3단계 통합 현금흐름 &amp; 크레바스 분석 보기</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm tabular-nums">
+                            <thead>
+                                <tr class="bg-slate-50 border-y border-slate-200 text-slate-600">
+                                    <th class="py-3 px-3 font-bold">상품 구분</th>
+                                    <th class="py-3 px-3 font-bold">적용 급여율</th>
+                                    <th class="py-3 px-3 font-bold">지급기간</th>
+                                    <th class="py-3 px-3 font-bold">가입금액 / 한도</th>
+                                    <th class="py-3 px-3 font-bold">세금 · 종합과세</th>
+                                    <th class="py-3 px-3 font-bold text-right">월 세전 수령</th>
+                                    <th class="py-3 px-3 font-bold text-right">월 세후 실수령</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ktcuCompareTableBody" class="divide-y divide-slate-100">
+                                <!-- JS 렌더링 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             TAB 3: 통합 현금흐름 & 크레바스 분석 + 시나리오 비교
+        ================================================================== -->
+        <section id="panel-dashboard" class="tab-panel space-y-6">
+
+            <!-- 상단 요약 KPI 4카드 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- KPI 1: 크레바스 공백기 평균 & 목표 대비 부족액 -->
+                <div class="bg-white rounded-2xl p-5 border-2 border-amber-300/80 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span id="kpiCrevassePeriod" class="text-[11px] font-extrabold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full">크레바스 (61~64세 · 4년)</span>
+                        <i data-lucide="hourglass" class="w-4 h-4 text-amber-600"></i>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-500">소득 공백기 평균 월 수령액</p>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-sm font-bold text-slate-500">월</span>
+                        <span id="kpiCrevasseMonthly" class="text-3xl font-extrabold text-slate-900 tabular-nums">0.0</span>
+                        <span class="text-sm font-bold text-slate-700">만원</span>
+                    </div>
+                    <p id="kpiCrevasseTargetNote" class="text-[11px] font-bold text-emerald-700">목표 생활비 대비 충족</p>
+                </div>
+
+                <!-- KPI 2: 연금 개시 시점 합산 -->
+                <div class="bg-white rounded-2xl p-5 border border-emerald-200 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span id="kpiPostStartLabel" class="text-[11px] font-extrabold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">만 65세 개시 시점</span>
+                        <i data-lucide="trending-up" class="w-4 h-4 text-emerald-600"></i>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-500">공무원연금 개시 후 합산 월액</p>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-sm font-bold text-slate-500">월</span>
+                        <span id="kpiPostStartMonthly" class="text-3xl font-extrabold text-emerald-700 tabular-nums">0.0</span>
+                        <span class="text-sm font-bold text-emerald-700">만원</span>
+                    </div>
+                    <p id="kpiPostTaxModeNote" class="text-[11px] text-slate-500">공무원연금(추정세후) + 공제회 합계</p>
+                </div>
+
+                <!-- KPI 3: 분할 종료 후 종신 수령액 -->
+                <div class="bg-white rounded-2xl p-5 border border-indigo-200 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-extrabold bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full">분할 종료 후 ~ 만 90세</span>
+                        <i data-lucide="infinity" class="w-4 h-4 text-indigo-700"></i>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-500">종신 고정 월 수령액</p>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-sm font-bold text-slate-500">월</span>
+                        <span id="kpiPermanentMonthly" class="text-3xl font-extrabold text-indigo-900 tabular-nums">0.0</span>
+                        <span class="text-sm font-bold text-indigo-900">만원</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500">공무원연금 + 부가금형 이자</p>
+                </div>
+
+                <!-- KPI 4: 퇴직 시 가용 일시금 -->
+                <div id="kpiLumpSumCard" class="bg-navy-900 text-white rounded-2xl p-5 shadow-md space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-extrabold bg-white/15 text-emerald-300 px-2.5 py-0.5 rounded-full">퇴직 시점 현금 여력</span>
+                        <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-300">퇴직 시 가용 일시금 (세후)</p>
+                    <div class="flex items-baseline gap-1">
+                        <span id="kpiAvailableLumpSum" class="text-2xl sm:text-3xl font-extrabold text-white tabular-nums">0</span>
+                        <span class="text-sm font-bold text-emerald-300">만원</span>
+                    </div>
+                    <p id="kpiLumpSumFormula" class="text-[10.5px] text-slate-400">퇴직수당 + 미전환 퇴직급여 - 생활급여 가입액</p>
+                </div>
+            </div>
+
+            <!-- 연령별 누적 막대 차트 + 토글 컨트롤 바 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 sm:p-6 space-y-5">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-base sm:text-lg font-extrabold text-navy-900 flex items-center gap-2">
+                            <span class="w-2 h-5 bg-indigo-600 rounded-full"></span>
+                            퇴직연령 ~ 만 90세 연령별 통합 월 현금흐름 차트
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">소득 크레바스 공백기(노란색 음영)와 목표 월 생활비(붉은 점선)를 한눈에 비교하세요.</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- 공무원연금 세전 / 추정세후 토글 -->
+                        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                            <button type="button" id="btnTaxNet" onclick="setPensionTaxMode('net')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm transition">
+                                공무원연금 추정세후
+                            </button>
+                            <button type="button" id="btnTaxGross" onclick="setPensionTaxMode('gross')" class="text-xs font-bold px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">
+                                공무원연금 세전
+                            </button>
+                        </div>
+
+                        <!-- 목표 월 생활비 입력 -->
+                        <div class="flex items-center gap-2 bg-rose-50/80 border border-rose-200 rounded-xl px-3 py-1.5">
+                            <label class="text-xs font-bold text-rose-700 whitespace-nowrap">목표 월 생활비</label>
+                            <input type="number" id="targetLivingInput" value="350" min="100" max="1000" step="10" oninput="recalculateAll()" class="w-16 bg-white border border-rose-300 rounded-lg px-2 py-1 text-right text-xs font-extrabold text-rose-700 tabular-nums">
+                            <span class="text-xs font-semibold text-rose-600">만원</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart.js 컨테이너 -->
+                <div class="relative w-full h-[350px] sm:h-[430px]">
+                    <canvas id="cashflowChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 시나리오 스냅샷 저장 & 나란히 비교 테이블 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 sm:p-6 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-base font-extrabold text-navy-900 flex items-center gap-2">
+                            <i data-lucide="git-compare" class="w-5 h-5 text-emerald-600"></i>
+                            시나리오 스냅샷 저장 &amp; 나란히 비교 (최대 4개 · 브라우저 자동 저장)
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">정년퇴직 vs 명예퇴직 vs 조기퇴직연금 vs 공제회 상품 조합을 저장해 비교해 보세요.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="scenarioNameInput" placeholder="예: 61세 퇴직 · 분할 10년" class="w-48 sm:w-56 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600">
+                        <button onclick="saveCurrentScenario()" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition">
+                            <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
+                            <span>시나리오 저장</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm tabular-nums">
+                        <thead>
+                            <tr class="bg-slate-50 border-y border-slate-200 text-slate-600">
+                                <th class="py-3 px-3 font-bold">시나리오명</th>
+                                <th class="py-3 px-3 font-bold">퇴직 / 개시</th>
+                                <th class="py-3 px-3 font-bold text-right">공무원연금(월)</th>
+                                <th class="py-3 px-3 font-bold text-right">크레바스 평균(월)</th>
+                                <th class="py-3 px-3 font-bold text-right">개시 후 합산(월)</th>
+                                <th class="py-3 px-3 font-bold text-right">가용 일시금</th>
+                                <th class="py-3 px-3 font-bold text-right">퇴직 후 30년 누적</th>
+                                <th class="py-3 px-3 font-bold text-center">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scenarioTableBody" class="divide-y divide-slate-100">
+                            <!-- JS 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 하단 출처 및 면책 푸터 -->
+        <footer class="bg-slate-200/75 border border-slate-300/75 rounded-2xl p-4 sm:p-5 text-[11.5px] text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+                <p class="font-bold text-slate-800">교직원 연금 &amp; 공제회 정밀 계산기 v2.1 (2026년 11월 최신 법령·공단 산식 반영)</p>
+                <p>※ 공무원연금법 부칙 제13조(단계적 지급률)·소득재분배 적용비율표·제62조(퇴직수당) 및 한국교직원공제회 2026.7.1 / 2026.10.20 공시 금리를 적용했습니다. 실제 수령액은 보수인상률·물가변동·건보료에 따라 달라질 수 있습니다.</p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <button onclick="openRedistModal()" class="text-xs font-bold text-indigo-800 hover:text-indigo-600 underline underline-offset-4">15구간 비율표</button>
+                <button onclick="openCriteriaModal()" class="text-xs font-bold text-navy-900 hover:text-emerald-700 underline underline-offset-4">법령·금리 출처</button>
+            </div>
+        </footer>
+    </main>
+
+    <!-- =====================================================================
+         JAVASCRIPT 핵심 계산 엔진 (v2.1 1원 단위 정밀 산식)
+    ====================================================================== -->
+    <script>
+        // Lucide 아이콘 초기화
+        lucide.createIcons();
+
+        const CURRENT_YEAR = 2026;
+        const STORAGE_KEY_INPUTS = 'teacher_pension_v2_1_inputs';
+        const STORAGE_KEY_SCENARIOS = 'teacher_pension_v2_1_scenarios';
+
+        let cashflowChartInstance = null;
+        let savedScenarios = [];
+        let pensionTaxMode = 'net'; // 'net' | 'gross'
+        let lastNeisReverseWon = 0;
+
+        /**
+         * 공무원연금법 부칙 법정 소득재분배 적용비율표 (15구간)
+         */
+        const REDISTRIBUTION_TABLE = [
+            { idx: 1,  min: 0.0, max: 0.3,      label: '0.3 미만',          short: '< 0.3',     rate: 300.00 },
+            { idx: 2,  min: 0.3, max: 0.4,      label: '0.3 이상 ~ 0.4 미만', short: '0.3 ~ 0.4', rate: 216.67 },
+            { idx: 3,  min: 0.4, max: 0.5,      label: '0.4 이상 ~ 0.5 미만', short: '0.4 ~ 0.5', rate: 175.00 },
+            { idx: 4,  min: 0.5, max: 0.6,      label: '0.5 이상 ~ 0.6 미만', short: '0.5 ~ 0.6', rate: 150.00 },
+            { idx: 5,  min: 0.6, max: 0.7,      label: '0.6 이상 ~ 0.7 미만', short: '0.6 ~ 0.7', rate: 133.33 },
+            { idx: 6,  min: 0.7, max: 0.8,      label: '0.7 이상 ~ 0.8 미만', short: '0.7 ~ 0.8', rate: 121.43 },
+            { idx: 7,  min: 0.8, max: 0.9,      label: '0.8 이상 ~ 0.9 미만', short: '0.8 ~ 0.9', rate: 112.50 },
+            { idx: 8,  min: 0.9, max: 1.0,      label: '0.9 이상 ~ 1.0 미만', short: '0.9 ~ 1.0', rate: 105.56 },
+            { idx: 9,  min: 1.0, max: 1.1,      label: '1.0 이상 ~ 1.1 미만', short: '1.0 ~ 1.1', rate: 100.00 },
+            { idx: 10, min: 1.1, max: 1.2,      label: '1.1 이상 ~ 1.2 미만', short: '1.1 ~ 1.2', rate: 95.45 },
+            { idx: 11, min: 1.2, max: 1.3,      label: '1.2 이상 ~ 1.3 미만', short: '1.2 ~ 1.3', rate: 91.67 },
+            { idx: 12, min: 1.3, max: 1.4,      label: '1.3 이상 ~ 1.4 미만', short: '1.3 ~ 1.4', rate: 88.46 },
+            { idx: 13, min: 1.4, max: 1.5,      label: '1.4 이상 ~ 1.5 미만', short: '1.4 ~ 1.5', rate: 85.71 },
+            { idx: 14, min: 1.5, max: 1.6,      label: '1.5 이상 ~ 1.6 미만', short: '1.5 ~ 1.6', rate: 83.33 },
+            { idx: 15, min: 1.6, max: Infinity, label: '1.6 이상',          short: '1.6 이상',   rate: 81.25 }
+        ];
+
+        // 최신 계산 결과 전역 상태
+        const calcState = {
+            retireAge: 61,
+            actualStartAge: 65,
+            pensionDisplayMonthlyMan: 0,
+            crevasseAvgMan: 0,
+            postStartMonthlyMan: 0,
+            availableLumpSumMan: 0,
+            total30YrAccumMan: 0,
+            currentTierIdx: 8,
+            currentRatio: 0,
+            currentRatePct: 100,
+            currentRedistWon: 0
+        };
+
+        // ---------------------------------------------------------------------
+        // 1. 유틸리티 & 법정 산식 함수
+        // ---------------------------------------------------------------------
+        function safeNum(id, fallback = 0) {
+            const el = document.getElementById(id);
+            if (!el) return fallback;
+            const v = parseFloat(el.value);
+            return Number.isFinite(v) ? v : fallback;
+        }
+
+        function fmtWon(val) {
+            if (!Number.isFinite(val)) return '0원';
+            return `${Math.round(val).toLocaleString('ko-KR')}원`;
+        }
+
+        function fmtManwon(val, showSign = false) {
+            if (!Number.isFinite(val)) return '0';
+            const sign = val < 0 ? '-' : (showSign && val > 0 ? '+' : '');
+            const absVal = Math.round(Math.abs(val));
+            if (absVal >= 10000) {
+                const eok = Math.floor(absVal / 10000);
+                const rest = absVal % 10000;
+                return rest > 0 ? `${sign}${eok}억 ${rest.toLocaleString('ko-KR')}` : `${sign}${eok}억`;
+            }
+            return `${sign}${absVal.toLocaleString('ko-KR')}`;
+        }
+
+        function fmtMonthly(val) {
+            if (!Number.isFinite(val)) return '0.0';
+            return val.toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        }
+
+        function syncSlider(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        }
+
+        function syncInput(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        }
+
+        function setMilitary(m) {
+            document.getElementById('militaryMonths').value = m;
+            recalculateAll();
+        }
+
+        function setValA(won) {
+            document.getElementById('valAInput').value = won;
+            recalculateAll();
+            showToast(`A값이 ${fmtWon(won)}으로 적용되었습니다.`);
+        }
+
+        function setKtcuUnits(units) {
+            document.getElementById('ktcuUnitsInput').value = units;
+            document.getElementById('ktcuUnitsSlider').value = units;
+            recalculateAll();
+        }
+
+        function onBugaCycleChange() {
+            const cycle = document.getElementById('bugaCycle').value;
+            document.getElementById('bugaRate').value = cycle === 'monthly' ? '4.12' : '4.20';
+            recalculateAll();
+        }
+
+        function setPensionTaxMode(mode) {
+            pensionTaxMode = mode;
+            const btnNet = document.getElementById('btnTaxNet');
+            const btnGross = document.getElementById('btnTaxGross');
+            if (mode === 'net') {
+                btnNet.className = 'text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm transition';
+                btnGross.className = 'text-xs font-bold px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition';
+            } else {
+                btnGross.className = 'text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm transition';
+                btnNet.className = 'text-xs font-bold px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition';
+            }
+            recalculateAll();
+        }
+
+        /** 나이스 일반기여금 역산 도우미 */
+        function calcNeisReverse() {
+            const contrib = Math.max(0, safeNum('neisContribInput', 0));
+            lastNeisReverseWon = Math.round(contrib / 0.09);
+            document.getElementById('neisReverseResult').textContent = fmtWon(lastNeisReverseWon);
+        }
+
+        function applyNeisToFinal() {
+            if (lastNeisReverseWon <= 0) {
+                showToast('먼저 월 일반기여금 금액을 입력해 주세요.');
+                return;
+            }
+            document.getElementById('finalIncomeInput').value = lastNeisReverseWon;
+            recalculateAll();
+            showToast(`역산된 올해 기준소득월액(${fmtWon(lastNeisReverseWon)})을 최종 기준소득월액에 복사했습니다.`);
+        }
+
+        /**
+         * B/A 비율에 해당하는 법정 소득재분배 구간 탐색
+         */
+        function getRedistributionTier(ratio) {
+            for (const tier of REDISTRIBUTION_TABLE) {
+                if (ratio >= tier.min && ratio < tier.max) {
+                    return tier;
+                }
+            }
+            return REDISTRIBUTION_TABLE[REDISTRIBUTION_TABLE.length - 1];
+        }
+
+        /**
+         * 공무원연금법 부칙 제13조: 3단계 차등 인하 연도별 지급률
+         */
+        function getYearAccrualRate(year) {
+            if (year <= 2015) return 0.01900;
+            const map = {
+                2016: 0.01878, 2017: 0.01856, 2018: 0.01834, 2019: 0.01812, 2020: 0.01790,
+                2021: 0.01780, 2022: 0.01770, 2023: 0.01760, 2024: 0.01750, 2025: 0.01740,
+                2026: 0.01736, 2027: 0.01732, 2028: 0.01728, 2029: 0.01724, 2030: 0.01720,
+                2031: 0.01716, 2032: 0.01712, 2033: 0.01708, 2034: 0.01704
+            };
+            return map[year] !== undefined ? map[year] : 0.01700;
+        }
+
+        /**
+         * 법정 지급개시연령 (임용연도 & 퇴직연도 기준)
+         */
+        function getLegalStartAge(appointYear, retireYear) {
+            if (appointYear >= 2016) return 65;
+            if (appointYear <= 1995) return 60;
+            if (retireYear <= 2021) return 60;
+            if (retireYear <= 2023) return 61;
+            if (retireYear <= 2026) return 62;
+            if (retireYear <= 2029) return 63;
+            if (retireYear <= 2032) return 64;
+            return 65;
+        }
+
+        /**
+         * 퇴직소득세 추정 계산 (단위: 만원)
+         */
+        function estimateRetirementIncomeTax(taxableMan, serviceYears) {
+            const income = Math.max(0, taxableMan);
+            const years = Math.max(1, Math.ceil(serviceYears));
+            if (income <= 0) return 0;
+
+            let tenureDed = 0;
+            if (years <= 5) tenureDed = 100 * years;
+            else if (years <= 10) tenureDed = 500 + 200 * (years - 5);
+            else if (years <= 20) tenureDed = 1500 + 250 * (years - 10);
+            else tenureDed = 4000 + 300 * (years - 20);
+
+            const afterTenure = Math.max(0, income - tenureDed);
+            if (afterTenure <= 0) return 0;
+
+            const converted = (afterTenure * 12) / years;
+            let convDed = 0;
+            if (converted <= 800) convDed = converted;
+            else if (converted <= 7000) convDed = 800 + (converted - 800) * 0.60;
+            else if (converted <= 10000) convDed = 4520 + (converted - 7000) * 0.55;
+            else if (converted <= 30000) convDed = 6170 + (converted - 10000) * 0.45;
+            else convDed = 15170 + (converted - 30000) * 0.35;
+
+            const taxBase = Math.max(0, converted - convDed);
+            if (taxBase <= 0) return 0;
+
+            let convTax = 0;
+            if (taxBase <= 1400) convTax = taxBase * 0.06;
+            else if (taxBase <= 5000) convTax = 84 + (taxBase - 1400) * 0.15;
+            else if (taxBase <= 8800) convTax = 624 + (taxBase - 5000) * 0.24;
+            else if (taxBase <= 15000) convTax = 1536 + (taxBase - 8800) * 0.35;
+            else convTax = 3706 + (taxBase - 15000) * 0.38;
+
+            return ((convTax * years) / 12) * 1.1;
+        }
+
+        /**
+         * 공무원연금 월 연금소득세 추정 (단위: 원)
+         */
+        function estimatePensionMonthlyTaxWon(monthlyGrossWon) {
+            const annualMan = (Math.max(0, monthlyGrossWon) / 10000) * 12;
+            if (annualMan <= 0) return 0;
+
+            let ded = 0;
+            if (annualMan <= 350) ded = annualMan;
+            else if (annualMan <= 700) ded = 350 + (annualMan - 350) * 0.40;
+            else if (annualMan <= 1400) ded = 490 + (annualMan - 700) * 0.20;
+            else ded = 630 + (annualMan - 1400) * 0.10;
+            ded = Math.min(900, ded);
+
+            const taxBase = Math.max(0, annualMan - ded - 150);
+            if (taxBase <= 0) return 0;
+
+            let annualTaxMan = 0;
+            if (taxBase <= 1400) annualTaxMan = taxBase * 0.06;
+            else if (taxBase <= 5000) annualTaxMan = 84 + (taxBase - 1400) * 0.15;
+            else annualTaxMan = 624 + (taxBase - 5000) * 0.24;
+
+            annualTaxMan = Math.max(0, annualTaxMan - 7) * 1.1;
+            return Math.floor(((annualTaxMan / 12) * 10000) / 10) * 10;
+        }
+
+        /**
+         * 퇴직 후 소득활동 연금 지급정지액 (단위: 원)
+         * 전년도 평균연금월액 280만 원 기준 5구간 30%~70% 누진, 연금의 50% 한도
+         */
+        function calcIncomeSuspensionWon(workIncomeMan, pensionMonthlyWon) {
+            const excessMan = Math.max(0, workIncomeMan - 280);
+            if (excessMan <= 0 || pensionMonthlyWon <= 0) return { excessMan: 0, deductionWon: 0 };
+
+            let rawMan = 0;
+            if (excessMan <= 50) rawMan = excessMan * 0.30;
+            else if (excessMan <= 100) rawMan = 15 + (excessMan - 50) * 0.40;
+            else if (excessMan <= 150) rawMan = 35 + (excessMan - 100) * 0.50;
+            else if (excessMan <= 200) rawMan = 60 + (excessMan - 150) * 0.60;
+            else rawMan = 90 + (excessMan - 200) * 0.70;
+
+            const rawWon = rawMan * 10000;
+            const cappedWon = Math.min(rawWon, pensionMonthlyWon * 0.50);
+            return { excessMan, deductionWon: Math.floor(cappedWon / 10) * 10 };
+        }
+
+        /** 원리금균등분할 월 수령액 (연복리 -> 월복리 환산) */
+        function calcAnnuityMonthly(principal, annualRatePct, years) {
+            if (principal <= 0 || years <= 0) return 0;
+            const n = years * 12;
+            const r = Math.max(0, annualRatePct) / 100;
+            if (r === 0) return principal / n;
+            const rm = Math.pow(1 + r, 1 / 12) - 1;
+            return principal * (rm * Math.pow(1 + rm, n)) / (Math.pow(1 + rm, n) - 1);
+        }
+
+        // ---------------------------------------------------------------------
+        // 2. 메인 통합 계산 엔진
+        // ---------------------------------------------------------------------
+        function recalculateAll() {
+            // ==================== [TAB 1: 공무원연금 정밀 계산기] ====================
+            const birthYear = Math.min(2015, Math.max(1945, Math.round(safeNum('birthYear', 1989))));
+            const appointYear = Math.min(2045, Math.max(1975, Math.round(safeNum('appointYear', 2016))));
+            const retireYear = Math.min(2075, Math.max(appointYear, Math.round(safeNum('retireYear', 2050))));
+            const retireAge = Math.max(40, Math.min(75, retireYear - birthYear));
+
+            document.getElementById('autoRetireAgeBadge').textContent = `만 ${retireAge}세 퇴직`;
+
+            // 법정 지급개시연령 판별
+            const baseStartAge = getLegalStartAge(appointYear, retireYear);
+            document.getElementById('baseStartAgeDisplay').textContent = `만 ${baseStartAge}세 개시`;
+
+            if (appointYear >= 2016) {
+                document.getElementById('pensionAgeRuleBadge').textContent = '2026.10 헌재 합헌 · 만 65세 확정';
+                document.getElementById('startAgeReasonText').textContent = '2016년 이후 임용자는 퇴직연도 무관 일괄 만 65세 개시 (2026.10 헌법재판소 합헌 결정 유지)';
+            } else if (appointYear <= 1995) {
+                document.getElementById('pensionAgeRuleBadge').textContent = '1995년 이전 임용 · 경과조치 만 60세';
+                document.getElementById('startAgeReasonText').textContent = '1995년 이전 임용자는 법정 경과조치에 따라 만 60세 개시 적용 (재직 20년 이상 기준)';
+            } else {
+                document.getElementById('pensionAgeRuleBadge').textContent = `1996~2015년 임용 · ${retireYear}년 퇴직 단계`;
+                document.getElementById('startAgeReasonText').textContent = `1996~2015년 임용자는 퇴직연도(${retireYear}년) 기준 만 ${baseStartAge}세 개시 (24~26:62세 / 27~29:63세 / 30~32:64세 / 33~:65세)`;
+            }
+
+            // 재직기간 산출
+            const pureServiceYears = Math.max(0, retireYear - appointYear);
+            const pureServiceMonths = pureServiceYears * 12;
+            const pre2016Years = appointYear < 2016 ? Math.max(0, Math.min(2016, retireYear) - appointYear) : 0;
+            const post2016Years = Math.max(0, retireYear - Math.max(2016, appointYear));
+
+            document.getElementById('pre2016YearsText').textContent = `${pre2016Years}년`;
+            document.getElementById('post2016YearsText').textContent = `${post2016Years}년`;
+
+            const milMonths = Math.min(36, Math.max(0, Math.round(safeNum('militaryMonths', 0))));
+            const rawPensionMonths = pureServiceMonths + milMonths;
+            const cappedPensionMonths = Math.min(36 * 12, rawPensionMonths);
+            const pensionYears = cappedPensionMonths / 12;
+
+            // 퇴직수당 인정 기간 (군복무 제외, 최대 33년)
+            const cappedSevMonths = Math.min(33 * 12, pureServiceMonths);
+            const severanceYears = cappedSevMonths / 12;
+
+            document.getElementById('pensionYearsDisplay').textContent = `${Math.floor(cappedPensionMonths / 12)}년 ${cappedPensionMonths % 12}개월`;
+            const over30Months = Math.max(0, cappedPensionMonths - 360);
+            document.getElementById('pensionYearsCapNote').textContent = over30Months > 0
+                ? `30년 한도 + 초과 ${(over30Months / 12).toFixed(1)}년${rawPensionMonths > 432 ? ' (36년 캡)' : ''}`
+                : `전체 30년 한도 이내`;
+
+            document.getElementById('severanceYearsDisplay').textContent = `${Math.floor(cappedSevMonths / 12)}년 ${cappedSevMonths % 12}개월`;
+            document.getElementById('severanceYearsCapNote').textContent = pureServiceMonths > 396
+                ? '시행령 제58조 33년 상한'
+                : `실재직 ${severanceYears.toFixed(1)}년 인정`;
+
+            // 3대 소득 입력 파싱 (원 단위)
+            const valA = Math.max(1000000, Math.round(safeNum('valAInput', 5710000)));
+            const capB = Math.floor(valA * 1.6);
+            const valBRaw = Math.max(500000, Math.round(safeNum('valBInput', 5500000)));
+            const valBCapped = Math.min(valBRaw, capB);
+            const finalIncomeWon = Math.max(500000, Math.round(safeNum('finalIncomeInput', 6500000)));
+
+            document.getElementById('valAManwonHint').textContent = `${fmtMonthly(valA / 10000)}만 원`;
+            document.getElementById('valBManwonHint').textContent = `${fmtMonthly(valBRaw / 10000)}만 원`;
+            document.getElementById('finalIncomeManwonHint').textContent = `${fmtMonthly(finalIncomeWon / 10000)}만 원`;
+            document.getElementById('valBCapHint').innerHTML = `개인 기준소득월액 법정 상한선 (A값 × 1.6배): <strong>${fmtWon(capB)}</strong>`;
+            document.getElementById('valBCapWarning').classList.toggle('hidden', valBRaw <= capB);
+
+            // [v2.1 핵심] 15구간 법정 소득재분배 계산 (1원 단위)
+            const ratio = valBCapped / valA;
+            const tier = getRedistributionTier(ratio);
+            const bRedist = Math.floor(valBCapped * (tier.rate / 100));
+
+            document.getElementById('verifyRatio').textContent = ratio.toFixed(4);
+            document.getElementById('verifyBracket').textContent = tier.short;
+            document.getElementById('verifyRatePct').textContent = `${tier.rate.toFixed(2)}%`;
+            document.getElementById('verifyRedistWon').textContent = fmtWon(bRedist);
+
+            calcState.currentTierIdx = tier.idx;
+            calcState.currentRatio = ratio;
+            calcState.currentRatePct = tier.rate;
+            calcState.currentRedistWon = bRedist;
+
+            // [v2.1 핵심] 연도별 차등 지급률 + 30년 한도 소득재분배 정밀 합산
+            let cumMonths = 0;
+            const MAX_TOTAL_MONTHS = 36 * 12; // 432개월
+            const MAX_REDIST_MONTHS = 30 * 12; // 360개월
+
+            let pensionPre2016Won = 0;
+            let ratePre2016 = 0;
+            let pensionWithin30Won = 0;
+            let rateWithin30 = 0;
+            let pensionOver30Won = 0;
+            let rateOver30 = 0;
+
+            // 1) 2016년 이전 임용자의 군복무 소급산입 (임용 전 복무 -> 1.9% 적용)
+            if (appointYear < 2016 && milMonths > 0) {
+                const m = Math.min(milMonths, MAX_TOTAL_MONTHS - cumMonths);
+                const frac = m / 12;
+                pensionPre2016Won += valBCapped * 0.01900 * frac;
+                ratePre2016 += 0.01900 * frac;
+                cumMonths += m;
+            }
+
+            // 2) 실재직 연도별 순회 (appointYear ~ retireYear - 1)
+            for (let y = appointYear; y < retireYear && cumMonths < MAX_TOTAL_MONTHS; y++) {
+                const m = Math.min(12, MAX_TOTAL_MONTHS - cumMonths);
+                const r_y = getYearAccrualRate(y);
+
+                if (y <= 2015) {
+                    const frac = m / 12;
+                    pensionPre2016Won += valBCapped * r_y * frac;
+                    ratePre2016 += r_y * frac;
+                } else {
+                    const mIn30 = Math.min(m, Math.max(0, MAX_REDIST_MONTHS - cumMonths));
+                    const mOver30 = m - mIn30;
+
+                    if (mIn30 > 0) {
+                        const fIn = mIn30 / 12;
+                        pensionWithin30Won += (bRedist * 0.01 + valBCapped * (r_y - 0.01)) * fIn;
+                        rateWithin30 += r_y * fIn;
+                    }
+                    if (mOver30 > 0) {
+                        const fOver = mOver30 / 12;
+                        pensionOver30Won += (valBCapped * r_y) * fOver;
+                        rateOver30 += r_y * fOver;
+                    }
+                }
+                cumMonths += m;
+            }
+
+            // 3) 2016년 이후 임용자의 군복무 소급산입 (1.7% 적용, 30년 이내 소득재분배 / 초과 미적용)
+            if (appointYear >= 2016 && milMonths > 0 && cumMonths < MAX_TOTAL_MONTHS) {
+                const m = Math.min(milMonths, MAX_TOTAL_MONTHS - cumMonths);
+                const mIn30 = Math.min(m, Math.max(0, MAX_REDIST_MONTHS - cumMonths));
+                const mOver30 = m - mIn30;
+                const rMil = 0.01700;
+
+                if (mIn30 > 0) {
+                    const fIn = mIn30 / 12;
+                    pensionWithin30Won += (bRedist * 0.01 + valBCapped * (rMil - 0.01)) * fIn;
+                    rateWithin30 += rMil * fIn;
+                }
+                if (mOver30 > 0) {
+                    const fOver = mOver30 / 12;
+                    pensionOver30Won += (valBCapped * rMil) * fOver;
+                    rateOver30 += rMil * fOver;
+                }
+                cumMonths += m;
+            }
+
+            const totalAccrualRate = ratePre2016 + rateWithin30 + rateOver30;
+            const rawNormalPensionWon = pensionYears >= 10
+                ? (pensionPre2016Won + pensionWithin30Won + pensionOver30Won)
+                : 0;
+            const normalPensionWon = Math.floor(rawNormalPensionWon / 10) * 10;
+
+            document.getElementById('min10YrWarning').classList.toggle('hidden', pensionYears >= 10);
+
+            // 조기퇴직연금 계산
+            const reqEarlyYears = Math.min(5, Math.max(0, Math.round(safeNum('earlyYearsSlider', 0))));
+            const maxAllowedEarly = Math.max(0, baseStartAge - retireAge);
+            const effEarlyYears = Math.min(reqEarlyYears, maxAllowedEarly);
+            const actualStartAge = Math.max(retireAge, baseStartAge - effEarlyYears);
+            const earlyDiscount = effEarlyYears * 0.05;
+
+            const earlyClampEl = document.getElementById('earlyClampNotice');
+            if (reqEarlyYears > maxAllowedEarly) {
+                earlyClampEl.classList.remove('hidden');
+                earlyClampEl.textContent = `※ 퇴직연령(만 ${retireAge}세) 이후부터 수령 가능하므로 최대 ${maxAllowedEarly}년 조기(만 ${actualStartAge}세 개시)까지만 적용됩니다.`;
+            } else {
+                earlyClampEl.classList.add('hidden');
+            }
+
+            const afterEarlyWon = Math.floor((normalPensionWon * (1 - earlyDiscount)) / 10) * 10;
+            const earlyDiffWon = Math.max(0, normalPensionWon - afterEarlyWon);
+
+            if (effEarlyYears > 0) {
+                document.getElementById('earlyStatusBadge').textContent = `${effEarlyYears}년 조기 (평생 -${effEarlyYears * 5}% 감액)`;
+                document.getElementById('earlyAnalysisRow').classList.remove('hidden');
+                document.getElementById('earlyMonthlyDiffText').textContent = `-${fmtWon(earlyDiffWon)}/월`;
+                const breakEvenAge = baseStartAge + (20 - effEarlyYears);
+                document.getElementById('earlyBreakEvenAgeText').textContent = `만 ${breakEvenAge}세`;
+            } else {
+                document.getElementById('earlyStatusBadge').textContent = '정상 수령 (감액 0%)';
+                document.getElementById('earlyAnalysisRow').classList.add('hidden');
+            }
+
+            // 퇴직 후 소득활동 연금 지급정지
+            const postWorkIncomeMan = Math.max(0, safeNum('postWorkIncomeInput', 0));
+            const susp = calcIncomeSuspensionWon(postWorkIncomeMan, afterEarlyWon);
+            const finalPensionGrossWon = Math.max(0, afterEarlyWon - susp.deductionWon);
+
+            const suspBox = document.getElementById('suspensionResultBox');
+            if (postWorkIncomeMan > 280 && afterEarlyWon > 0) {
+                suspBox.classList.remove('hidden');
+                document.getElementById('suspExcessText').textContent = `${fmtManwon(susp.excessMan)}만 원`;
+                document.getElementById('suspDeductionText').textContent = `-${fmtWon(susp.deductionWon)}/월`;
+                document.getElementById('suspAfterMonthlyText').textContent = fmtWon(finalPensionGrossWon);
+            } else {
+                suspBox.classList.add('hidden');
+            }
+
+            // 공무원연금 추정 연금소득세
+            const pensionTaxWon = estimatePensionMonthlyTaxWon(finalPensionGrossWon);
+            const finalPensionNetWon = Math.max(0, finalPensionGrossWon - pensionTaxWon);
+
+            // TAB 1 연금 UI 업데이트
+            document.getElementById('resActualStartAgeBadge').textContent = `만 ${actualStartAge}세 개시`;
+            document.getElementById('resPensionGrossWon').textContent = fmtWon(finalPensionGrossWon);
+            document.getElementById('resPensionSummarySub').textContent = `약 ${fmtMonthly(finalPensionGrossWon / 10000)}만 원 · 추정 세후 월 ${fmtWon(finalPensionNetWon)} (세금 약 ${fmtWon(pensionTaxWon)})`;
+            document.getElementById('resRateSumText').textContent = `${(totalAccrualRate * 100).toFixed(3)}%`;
+            document.getElementById('resBreakPre2016').textContent = `${fmtWon(Math.floor(pensionPre2016Won / 10) * 10)} (${(ratePre2016 * 100).toFixed(3)}%)`;
+            document.getElementById('resBreakWithin30').textContent = `${fmtWon(Math.floor(pensionWithin30Won / 10) * 10)} (${(rateWithin30 * 100).toFixed(3)}%)`;
+            document.getElementById('resBreakOver30').textContent = `${fmtWon(Math.floor(pensionOver30Won / 10) * 10)} (${(rateOver30 * 100).toFixed(3)}%)`;
+            document.getElementById('resPensionNetWon').textContent = `월 ${fmtWon(finalPensionNetWon)}`;
+
+            // 퇴직수당 계산 (최종 기준소득월액 × 인정연수[최대 33년, 군복무 제외] × 지급률)
+            let sevRate = 0;
+            if (severanceYears >= 20) sevRate = 0.3900;
+            else if (severanceYears >= 15) sevRate = 0.3250;
+            else if (severanceYears >= 10) sevRate = 0.2925;
+            else if (severanceYears >= 5) sevRate = 0.2275;
+            else if (severanceYears >= 1) sevRate = 0.0650;
+
+            const sevGrossWon = Math.floor((finalIncomeWon * severanceYears * sevRate) / 10) * 10;
+            const sevGrossMan = sevGrossWon / 10000;
+            const sevTaxMan = estimateRetirementIncomeTax(sevGrossMan, severanceYears);
+            const sevNetMan = Math.max(0, sevGrossMan - sevTaxMan);
+
+            document.getElementById('resSevYearsSub').textContent = `최종 기준소득월액(${fmtMonthly(finalIncomeWon / 10000)}만) × ${severanceYears.toFixed(1)}년 (군복무 제외)`;
+            document.getElementById('resSevRateBadge').textContent = `${(sevRate * 100).toFixed(2)}%`;
+            document.getElementById('resSevGross').textContent = fmtWon(sevGrossWon);
+            document.getElementById('resSevNet').textContent = `약 ${fmtManwon(sevNetMan)}만 원 (퇴직소득세 추정 약 ${fmtManwon(sevTaxMan)}만 원)`;
+
+
+            // ==================== [TAB 2: 한국교직원공제회] ====================
+            const ktcuCurrentBal = Math.max(0, safeNum('ktcuCurrentBal', 3000));
+            const ktcuPastYears = Math.max(0, safeNum('ktcuPastYears', 5));
+            let ktcuUnits = Math.round(safeNum('ktcuUnitsInput', 1000) / 10) * 10;
+            ktcuUnits = Math.min(2500, Math.max(50, ktcuUnits));
+            const ktcuMonthlyAdd = (ktcuUnits * 600) / 10000; // 만원
+
+            document.getElementById('ktcuUnitsMoneyText').textContent = `${ktcuUnits.toLocaleString('ko-KR')}구좌 = 월 ${ktcuMonthlyAdd.toLocaleString('ko-KR')}만 원`;
+
+            const ktcuSyncRetire = document.getElementById('ktcuSyncRetire').checked;
+            const remainEl = document.getElementById('ktcuRemainYears');
+            let ktcuRemainYears = Math.max(0, Math.round(safeNum('ktcuRemainYears', 24)));
+            if (ktcuSyncRetire) {
+                ktcuRemainYears = Math.max(0, retireYear - CURRENT_YEAR);
+                remainEl.value = ktcuRemainYears;
+                remainEl.disabled = true;
+            } else {
+                remainEl.disabled = false;
+            }
+
+            const ktcuAccumRate = Math.max(0, safeNum('ktcuAccumRate', 5.00)) / 100;
+            const ktcuMonthlyRate = Math.pow(1 + ktcuAccumRate, 1 / 12) - 1;
+            const nAddMonths = ktcuRemainYears * 12;
+
+            const fvExisting = ktcuCurrentBal * Math.pow(1 + ktcuAccumRate, ktcuRemainYears);
+            const fvMonthly = nAddMonths > 0
+                ? (ktcuMonthlyRate > 0
+                    ? ktcuMonthlyAdd * ((Math.pow(1 + ktcuMonthlyRate, nAddMonths) - 1) / ktcuMonthlyRate)
+                    : ktcuMonthlyAdd * nAddMonths)
+                : 0;
+
+            const ktcuGross = fvExisting + fvMonthly;
+            const ktcuPrincipal = ktcuCurrentBal + (ktcuMonthlyAdd * nAddMonths);
+            const ktcuInterest = Math.max(0, ktcuGross - ktcuPrincipal);
+            const ktcuTotalYears = Math.max(1, ktcuPastYears + ktcuRemainYears);
+
+            const ktcuTax = estimateRetirementIncomeTax(ktcuInterest, ktcuTotalYears);
+            const ktcuEffRate = ktcuInterest > 0 ? (ktcuTax / ktcuInterest) * 100 : 0;
+            const ktcuNet = Math.max(0, ktcuGross - ktcuTax);
+
+            document.getElementById('resKtcuTotalYearsBadge').textContent = `총 ${ktcuTotalYears}년 가입`;
+            document.getElementById('resKtcuAfterTax').textContent = fmtManwon(ktcuNet);
+            document.getElementById('resKtcuPrincipal').textContent = `${fmtManwon(ktcuPrincipal)}만원`;
+            document.getElementById('resKtcuInterest').textContent = `+${fmtManwon(ktcuInterest)}만원`;
+            document.getElementById('resKtcuGross').textContent = `${fmtManwon(ktcuGross)}만원`;
+            document.getElementById('resKtcuEffTaxRate').textContent = `(이자 대비 ${ktcuEffRate.toFixed(1)}%)`;
+            document.getElementById('resKtcuTax').textContent = `-${fmtManwon(ktcuTax)}만원`;
+
+            // --- 상품 A: 장기저축급여 분할급여금 ---
+            const useSplit = document.getElementById('useSplitProduct').checked;
+            const splitRatio = Math.min(100, Math.max(0, safeNum('splitRatioSlider', 100)));
+            const splitDeposit = useSplit ? (ktcuNet * (splitRatio / 100)) : 0;
+            document.getElementById('splitMinWarning').classList.toggle('hidden', !(useSplit && splitDeposit > 0 && splitDeposit < 500));
+
+            const splitYears = parseInt(document.getElementById('splitYears').value, 10) || 10;
+            const splitRatePct = Math.max(0, safeNum('splitRate', 5.00));
+            const splitTaxRatePct = Math.min(15.4, Math.max(0, safeNum('splitTaxRateInput', 3.3)));
+
+            const splitGrossMonthly = calcAnnuityMonthly(splitDeposit, splitRatePct, splitYears);
+            const splitPrincipalMonthly = splitYears > 0 ? (splitDeposit / (splitYears * 12)) : 0;
+            const splitInterestMonthly = Math.max(0, splitGrossMonthly - splitPrincipalMonthly);
+            const splitMonthlyTax = splitInterestMonthly * (splitTaxRatePct / 100);
+            const splitNetMonthly = Math.max(0, splitGrossMonthly - splitMonthlyTax);
+
+            document.getElementById('splitRatioText').textContent = `${splitRatio}% (${fmtManwon(ktcuNet * (splitRatio / 100))}만원)`;
+            document.getElementById('resSplitGrossMonthly').textContent = `월 ${fmtMonthly(splitGrossMonthly)}만원`;
+            document.getElementById('resSplitNetMonthly').textContent = `월 ${fmtMonthly(splitNetMonthly)}만원`;
+            document.getElementById('resSplitTaxInfo').textContent = `이자분 저율과세 ${splitTaxRatePct.toFixed(1)}% 적용 · 종합과세 제외`;
+
+            // --- 상품 B: 퇴직생활급여 확정연금형 (최대 3억 / 60구좌, 5~20년, 15.4%) ---
+            const useFixed = document.getElementById('useFixedProduct').checked;
+            const fixedRaw = Math.max(0, safeNum('fixedDepositInput', 5000));
+            const fixedCapped = Math.min(30000, fixedRaw);
+            const fixedDeposit = useFixed ? fixedCapped : 0;
+
+            document.getElementById('fixedCapWarning').classList.toggle('hidden', fixedRaw <= 30000);
+            document.getElementById('fixedUnitsLabel').textContent = `${Math.round(fixedCapped / 500)}구좌 (${fmtManwon(fixedCapped)}만원)`;
+
+            const fixedYears = parseInt(document.getElementById('fixedYears').value, 10) || 5;
+            const fixedRatePct = Math.max(0, safeNum('fixedRate', 5.00));
+            const fixedGrossMonthly = calcAnnuityMonthly(fixedDeposit, fixedRatePct, fixedYears);
+            const fixedPrincipalMonthly = fixedYears > 0 ? (fixedDeposit / (fixedYears * 12)) : 0;
+            const fixedInterestMonthly = Math.max(0, fixedGrossMonthly - fixedPrincipalMonthly);
+            const fixedMonthlyTax = fixedInterestMonthly * 0.154;
+            const fixedNetMonthly = Math.max(0, fixedGrossMonthly - fixedMonthlyTax);
+
+            document.getElementById('resFixedGrossMonthly').textContent = `월 ${fmtMonthly(fixedGrossMonthly)}만원`;
+            document.getElementById('resFixedNetMonthly').textContent = `월 ${fmtMonthly(fixedNetMonthly)}만원`;
+            document.getElementById('resFixedTaxInfo').textContent = `이자 15.4% 과세 (월 세금 약 ${fmtMonthly(fixedMonthlyTax)}만원)`;
+
+            // --- 상품 C: 퇴직생활급여 부가금형 (확정형 합산 5억 / 100구좌, 15.4%) ---
+            const useBuga = document.getElementById('useBugaProduct').checked;
+            const maxBugaAllowed = Math.max(0, 50000 - fixedDeposit);
+            const bugaRaw = Math.max(0, safeNum('bugaDepositInput', 3000));
+            const bugaCapped = Math.min(maxBugaAllowed, bugaRaw);
+            const bugaDeposit = useBuga ? bugaCapped : 0;
+
+            document.getElementById('bugaRemainCapLabel').textContent = `(잔여한도 ${fmtManwon(maxBugaAllowed)}만원)`;
+            document.getElementById('bugaUnitsLabel').textContent = `${Math.round(bugaCapped / 500)}구좌 (${fmtManwon(bugaCapped)}만원)`;
+            document.getElementById('bugaCapWarning').classList.toggle('hidden', bugaRaw <= maxBugaAllowed);
+
+            const bugaCycle = document.getElementById('bugaCycle').value;
+            const bugaRatePct = Math.max(0, safeNum('bugaRate', bugaCycle === 'monthly' ? 4.12 : 4.20));
+            const bugaAnnualGross = bugaDeposit * (bugaRatePct / 100);
+            const bugaGrossMonthly = bugaAnnualGross / 12;
+            const bugaMonthlyTax = bugaGrossMonthly * 0.154;
+            const bugaNetMonthly = Math.max(0, bugaGrossMonthly - bugaMonthlyTax);
+
+            document.getElementById('resBugaGrossMonthly').textContent = `월 ${fmtMonthly(bugaGrossMonthly)}만원`;
+            document.getElementById('resBugaNetMonthly').textContent = `월 ${fmtMonthly(bugaNetMonthly)}만원`;
+            document.getElementById('resBugaTaxInfo').textContent = `15.4% 과세 (연 세후 ${fmtManwon(bugaNetMonthly * 12)}만원 · 원금보존)`;
+
+            // 금융소득종합과세(연 2,000만 원 초과) 자동 경보
+            const annualTaxableInterestMan = (fixedInterestMonthly * 12) + bugaAnnualGross;
+            const compWarnEl = document.getElementById('comprehensiveTaxWarning');
+            if (annualTaxableInterestMan > 2000) {
+                compWarnEl.classList.remove('hidden');
+                document.getElementById('comprehensiveTaxMsg').textContent = `퇴직생활급여 연간 이자 약 ${fmtManwon(annualTaxableInterestMan)}만 원 (2,000만 원 초과 · 금융소득종합과세 경보!)`;
+            } else {
+                compWarnEl.classList.add('hidden');
+            }
+
+            renderKtcuCompareTable({
+                useSplit, splitRatePct, splitYears, splitDeposit, splitGrossMonthly, splitNetMonthly, splitTaxRatePct,
+                useFixed, fixedRatePct, fixedYears, fixedDeposit, fixedGrossMonthly, fixedNetMonthly,
+                useBuga, bugaRatePct, bugaCycle, bugaDeposit, bugaGrossMonthly, bugaNetMonthly
+            });
+
+
+            // ==================== [TAB 3: 통합 현금흐름 & 크레바스 분석] ====================
+            const targetLivingMan = Math.max(50, safeNum('targetLivingInput', 350));
+            const pensionDisplayMan = pensionTaxMode === 'net'
+                ? (finalPensionNetWon / 10000)
+                : (finalPensionGrossWon / 10000);
+
+            document.getElementById('kpiPostTaxModeNote').textContent =
+                `공무원연금(${pensionTaxMode === 'net' ? '추정세후' : '세전'}) + 공제회 합계`;
+
+            // 퇴직 시 가용 일시금 (세후)
+            const unconvertedKtcuMan = Math.max(0, ktcuNet - splitDeposit);
+            const availableLumpSumMan = sevNetMan + unconvertedKtcuMan - fixedDeposit - bugaDeposit;
+
+            // 연령별 시뮬레이션 (retireAge ~ 90세)
+            const ages = [];
+            const arrPension = [];
+            const arrSplit = [];
+            const arrFixed = [];
+            const arrBuga = [];
+            const arrTarget = [];
+
+            const crevasseYears = Math.max(0, actualStartAge - retireAge);
+            let crevasseSumMan = 0;
+            let total30YrAccumMan = 0;
+
+            for (let age = retireAge; age <= 90; age++) {
+                const yrIdx = age - retireAge;
+                const pVal = age >= actualStartAge ? pensionDisplayMan : 0;
+                const sVal = (useSplit && yrIdx < splitYears) ? splitNetMonthly : 0;
+                const fVal = (useFixed && yrIdx < fixedYears) ? fixedNetMonthly : 0;
+                const bVal = useBuga ? bugaNetMonthly : 0;
+
+                ages.push(`${age}세`);
+                arrPension.push(Number(pVal.toFixed(1)));
+                arrSplit.push(Number(sVal.toFixed(1)));
+                arrFixed.push(Number(fVal.toFixed(1)));
+                arrBuga.push(Number(bVal.toFixed(1)));
+                arrTarget.push(targetLivingMan);
+
+                const yrMonthlySum = pVal + sVal + fVal + bVal;
+                if (age < actualStartAge) {
+                    crevasseSumMan += yrMonthlySum;
+                }
+                if (yrIdx < 30) {
+                    total30YrAccumMan += yrMonthlySum * 12;
+                }
+            }
+
+            const crevasseAvgMan = crevasseYears > 0 ? (crevasseSumMan / crevasseYears) : 0;
+            const postIdx = actualStartAge - retireAge;
+            const postStartMonthlyMan = pensionDisplayMan
+                + (useSplit && postIdx < splitYears ? splitNetMonthly : 0)
+                + (useFixed && postIdx < fixedYears ? fixedNetMonthly : 0)
+                + (useBuga ? bugaNetMonthly : 0);
+            const permanentMonthlyMan = pensionDisplayMan + (useBuga ? bugaNetMonthly : 0);
+
+            // KPI 업데이트
+            if (crevasseYears > 0) {
+                document.getElementById('kpiCrevassePeriod').textContent = `크레바스 (${retireAge}~${actualStartAge - 1}세 · ${crevasseYears}년)`;
+                document.getElementById('kpiCrevasseMonthly').textContent = fmtMonthly(crevasseAvgMan);
+                const diff = crevasseAvgMan - targetLivingMan;
+                const noteEl = document.getElementById('kpiCrevasseTargetNote');
+                if (diff >= 0) {
+                    noteEl.textContent = `목표(${targetLivingMan}만) 대비 +${fmtMonthly(diff)}만원 여유`;
+                    noteEl.className = 'text-[11px] font-bold text-emerald-700';
+                } else {
+                    noteEl.textContent = `목표(${targetLivingMan}만) 대비 월 ${fmtMonthly(Math.abs(diff))}만원 부족`;
+                    noteEl.className = 'text-[11px] font-bold text-rose-600';
+                }
+            } else {
+                document.getElementById('kpiCrevassePeriod').textContent = '소득 크레바스 없음';
+                document.getElementById('kpiCrevasseMonthly').textContent = fmtMonthly(postStartMonthlyMan);
+                document.getElementById('kpiCrevasseTargetNote').textContent = '퇴직 즉시 공무원연금 개시';
+                document.getElementById('kpiCrevasseTargetNote').className = 'text-[11px] font-bold text-emerald-700';
+            }
+
+            document.getElementById('kpiPostStartLabel').textContent = `만 ${actualStartAge}세 개시 시점`;
+            document.getElementById('kpiPostStartMonthly').textContent = fmtMonthly(postStartMonthlyMan);
+            document.getElementById('kpiPermanentMonthly').textContent = fmtMonthly(permanentMonthlyMan);
+
+            const lumpCard = document.getElementById('kpiLumpSumCard');
+            document.getElementById('kpiAvailableLumpSum').textContent = fmtManwon(availableLumpSumMan);
+            if (availableLumpSumMan < 0) {
+                lumpCard.className = 'bg-rose-900 text-white rounded-2xl p-5 shadow-md space-y-2';
+                document.getElementById('kpiLumpSumFormula').textContent = '⚠️ 퇴직생활급여 가입액이 보유 일시금을 초과함 (추가 자금 필요)';
+            } else {
+                lumpCard.className = 'bg-navy-900 text-white rounded-2xl p-5 shadow-md space-y-2';
+                document.getElementById('kpiLumpSumFormula').textContent = `퇴직수당(${fmtManwon(sevNetMan)}) + 미전환(${fmtManwon(unconvertedKtcuMan)}) - 생활급여(${fmtManwon(fixedDeposit + bugaDeposit)})`;
+            }
+
+            // 전역 상태 저장
+            calcState.retireAge = retireAge;
+            calcState.actualStartAge = actualStartAge;
+            calcState.pensionDisplayMonthlyMan = pensionDisplayMan;
+            calcState.crevasseAvgMan = crevasseYears > 0 ? crevasseAvgMan : postStartMonthlyMan;
+            calcState.postStartMonthlyMan = postStartMonthlyMan;
+            calcState.availableLumpSumMan = availableLumpSumMan;
+            calcState.total30YrAccumMan = total30YrAccumMan;
+
+            // 차트 & 15구간 표 갱신
+            renderCashflowChart(ages, arrPension, arrSplit, arrFixed, arrBuga, arrTarget, crevasseYears);
+            renderRedistTableModal();
+            persistInputs();
+        }
+
+        // ---------------------------------------------------------------------
+        // 3. 15구간 법정 소득재분배 표 모달 렌더링
+        // ---------------------------------------------------------------------
+        function renderRedistTableModal() {
+            document.getElementById('modalCurrentRatio').textContent = calcState.currentRatio.toFixed(4);
+            document.getElementById('modalCurrentRate').textContent = `${calcState.currentRatePct.toFixed(2)}%`;
+            document.getElementById('modalCurrentRedist').textContent = fmtWon(calcState.currentRedistWon);
+
+            const tbody = document.getElementById('redistTableBody');
+            tbody.innerHTML = REDISTRIBUTION_TABLE.map(row => {
+                const isActive = row.idx === calcState.currentTierIdx;
+                return `
+                    <tr class="${isActive ? 'bg-emerald-50 font-extrabold text-emerald-950 ring-2 ring-inset ring-emerald-500' : 'hover:bg-slate-50 text-slate-700'}">
+                        <td class="py-2 px-3">${row.idx}구간</td>
+                        <td class="py-2 px-3">${row.label}</td>
+                        <td class="py-2 px-3 text-right ${isActive ? 'text-emerald-700' : ''}">${row.rate.toFixed(2)}%</td>
+                        <td class="py-2 px-3 text-center">
+                            ${isActive ? '<span class="inline-block bg-emerald-600 text-white text-[10.5px] font-bold px-2 py-0.5 rounded-full">현재 해당</span>' : '<span class="text-slate-300">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ---------------------------------------------------------------------
+        // 4. 공제회 3대 상품 비교표 렌더링
+        // ---------------------------------------------------------------------
+        function renderKtcuCompareTable(d) {
+            const tbody = document.getElementById('ktcuCompareTableBody');
+            const totalGross = d.splitGrossMonthly + d.fixedGrossMonthly + d.bugaGrossMonthly;
+            const totalNet = d.splitNetMonthly + d.fixedNetMonthly + d.bugaNetMonthly;
+
+            tbody.innerHTML = `
+                <tr class="${d.useSplit ? 'hover:bg-emerald-50/40' : 'opacity-45 bg-slate-50'}">
+                    <td class="py-3 px-3 font-extrabold text-emerald-800">상품 A · 장기저축급여 분할급여금</td>
+                    <td class="py-3 px-3 font-bold text-emerald-700">연복리 ${d.splitRatePct.toFixed(2)}%</td>
+                    <td class="py-3 px-3">${d.splitYears}년 (5~30년)</td>
+                    <td class="py-3 px-3 font-semibold">${fmtManwon(d.splitDeposit)}만원 <span class="text-[11px] text-slate-400">/ 전액</span></td>
+                    <td class="py-3 px-3"><span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full">저율과세(${d.splitTaxRatePct.toFixed(1)}%) · 종합과세 제외</span></td>
+                    <td class="py-3 px-3 text-right font-semibold">${fmtMonthly(d.splitGrossMonthly)}만원</td>
+                    <td class="py-3 px-3 text-right font-extrabold text-emerald-700">${fmtMonthly(d.splitNetMonthly)}만원</td>
+                </tr>
+                <tr class="${d.useFixed ? 'hover:bg-slate-50' : 'opacity-45 bg-slate-50'}">
+                    <td class="py-3 px-3 font-extrabold text-teal-800">상품 B · 퇴직생활급여 (확정연금형)</td>
+                    <td class="py-3 px-3 font-bold text-teal-700">연복리 ${d.fixedRatePct.toFixed(2)}%</td>
+                    <td class="py-3 px-3">${d.fixedYears}년 (5~20년)</td>
+                    <td class="py-3 px-3 font-semibold">${fmtManwon(d.fixedDeposit)}만원 <span class="text-[11px] text-slate-400">/ 최대 3억</span></td>
+                    <td class="py-3 px-3"><span class="bg-rose-50 text-rose-700 text-[11px] font-bold px-2 py-0.5 rounded-full">이자 15.4% · 종합과세 대상</span></td>
+                    <td class="py-3 px-3 text-right font-semibold">${fmtMonthly(d.fixedGrossMonthly)}만원</td>
+                    <td class="py-3 px-3 text-right font-extrabold text-teal-700">${fmtMonthly(d.fixedNetMonthly)}만원</td>
+                </tr>
+                <tr class="${d.useBuga ? 'hover:bg-slate-50' : 'opacity-45 bg-slate-50'}">
+                    <td class="py-3 px-3 font-extrabold text-sky-800">상품 C · 퇴직생활급여 (부가금형)</td>
+                    <td class="py-3 px-3 font-bold text-sky-700">${d.bugaCycle === 'monthly' ? '월' : '연'} ${d.bugaRatePct.toFixed(2)}%</td>
+                    <td class="py-3 px-3">원금보존 (종신)</td>
+                    <td class="py-3 px-3 font-semibold">${fmtManwon(d.bugaDeposit)}만원 <span class="text-[11px] text-slate-400">/ 합산 5억</span></td>
+                    <td class="py-3 px-3"><span class="bg-rose-50 text-rose-700 text-[11px] font-bold px-2 py-0.5 rounded-full">이자 15.4% · 종합과세 대상</span></td>
+                    <td class="py-3 px-3 text-right font-semibold">${fmtMonthly(d.bugaGrossMonthly)}만원</td>
+                    <td class="py-3 px-3 text-right font-extrabold text-sky-700">${fmtMonthly(d.bugaNetMonthly)}만원</td>
+                </tr>
+                <tr class="bg-slate-50 font-extrabold text-navy-900">
+                    <td colspan="5" class="py-3 px-3 text-right">선택된 공제회 상품 퇴직 직후 월 합산 수령액</td>
+                    <td class="py-3 px-3 text-right">${fmtMonthly(totalGross)}만원</td>
+                    <td class="py-3 px-3 text-right text-emerald-700">${fmtMonthly(totalNet)}만원</td>
+                </tr>
+            `;
+        }
+
+        // ---------------------------------------------------------------------
+        // 5. Chart.js 통합 현금흐름 차트 + 크레바스 음영 플러그인
+        // ---------------------------------------------------------------------
+        const crevasseHighlightPlugin = {
+            id: 'crevasseHighlight',
+            beforeDatasetsDraw(chart, args, pluginOptions) {
+                const count = pluginOptions.crevasseYears || 0;
+                if (count <= 0) return;
+
+                const { ctx, chartArea: { top, bottom, left, right }, scales: { x } } = chart;
+                const firstX = x.getPixelForValue(0);
+                const lastX = x.getPixelForValue(count - 1);
+                const step = count > 1 ? (lastX - firstX) / (count - 1) : (x.getPixelForValue(1) - firstX || 24);
+                const leftEdge = Math.max(left, firstX - step / 2);
+                const rightEdge = Math.min(right, lastX + step / 2);
+
+                ctx.save();
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.16)';
+                ctx.fillRect(leftEdge, top, rightEdge - leftEdge, bottom - top);
+
+                ctx.strokeStyle = 'rgba(217, 119, 6, 0.55)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(rightEdge, top);
+                ctx.lineTo(rightEdge, bottom);
+                ctx.stroke();
+
+                ctx.fillStyle = '#B45309';
+                ctx.font = 'bold 11px Pretendard, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('소득 크레바스', (leftEdge + rightEdge) / 2, top + 16);
+                ctx.restore();
+            }
+        };
+
+        function renderCashflowChart(labels, pension, split, fixed, buga, target, crevasseYears) {
+            const canvas = document.getElementById('cashflowChart');
+            if (!canvas) return;
+            const pensionLabel = pensionTaxMode === 'net' ? '공무원연금 (추정세후)' : '공무원연금 (세전)';
+
+            if (cashflowChartInstance) {
+                cashflowChartInstance.data.labels = labels;
+                cashflowChartInstance.data.datasets[0].label = pensionLabel;
+                cashflowChartInstance.data.datasets[0].data = pension;
+                cashflowChartInstance.data.datasets[1].data = split;
+                cashflowChartInstance.data.datasets[2].data = fixed;
+                cashflowChartInstance.data.datasets[3].data = buga;
+                cashflowChartInstance.data.datasets[4].data = target;
+                cashflowChartInstance.options.plugins.crevasseHighlight.crevasseYears = crevasseYears;
+                cashflowChartInstance.update('none');
+                return;
+            }
+
+            cashflowChartInstance = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: pensionLabel,
+                            data: pension,
+                            backgroundColor: '#3730A3',
+                            borderRadius: 3,
+                            stack: 'income',
+                            order: 2
+                        },
+                        {
+                            label: '공제회 분할급여금 (세후)',
+                            data: split,
+                            backgroundColor: '#059669',
+                            borderRadius: 3,
+                            stack: 'income',
+                            order: 2
+                        },
+                        {
+                            label: '퇴직생활 확정연금형 (세후)',
+                            data: fixed,
+                            backgroundColor: '#0D9488',
+                            borderRadius: 3,
+                            stack: 'income',
+                            order: 2
+                        },
+                        {
+                            label: '퇴직생활 부가금형 (세후)',
+                            data: buga,
+                            backgroundColor: '#0284C7',
+                            borderRadius: 3,
+                            stack: 'income',
+                            order: 2
+                        },
+                        {
+                            label: '목표 월 생활비',
+                            type: 'line',
+                            data: target,
+                            borderColor: '#E11D48',
+                            backgroundColor: '#E11D48',
+                            borderWidth: 2.5,
+                            borderDash: [6, 4],
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            fill: false,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        crevasseHighlight: { crevasseYears },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 14,
+                                font: { family: 'Pretendard, sans-serif', size: 11, weight: '600' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(11, 19, 43, 0.94)',
+                            titleFont: { family: 'Pretendard, sans-serif', size: 13, weight: 'bold' },
+                            bodyFont: { family: 'Pretendard, sans-serif', size: 12 },
+                            padding: 12,
+                            cornerRadius: 10,
+                            callbacks: {
+                                footer(items) {
+                                    const sum = items
+                                        .filter(i => i.dataset.type !== 'line')
+                                        .reduce((acc, i) => acc + (i.parsed.y || 0), 0);
+                                    return `총 월 예상 수령액: ${sum.toFixed(1)}만원`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: { font: { size: 11, weight: '600' } }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { color: '#E2E8F0' },
+                            ticks: {
+                                callback: v => `${v}만`,
+                                font: { size: 11, weight: '600' }
+                            }
+                        }
+                    }
+                },
+                plugins: [crevasseHighlightPlugin]
+            });
+        }
+
+        // ---------------------------------------------------------------------
+        // 6. 시나리오 저장 · 불러오기 · 삭제 (최대 4개, localStorage 유지)
+        // ---------------------------------------------------------------------
+        const VALUE_IDS = [
+            'birthYear', 'appointYear', 'retireYear', 'militaryMonths',
+            'valAInput', 'valBInput', 'finalIncomeInput', 'earlyYearsSlider', 'postWorkIncomeInput',
+            'ktcuCurrentBal', 'ktcuPastYears', 'ktcuUnitsInput', 'ktcuAccumRate', 'ktcuRemainYears',
+            'splitRatioSlider', 'splitYears', 'splitRate', 'splitTaxRateInput',
+            'fixedDepositInput', 'fixedYears', 'fixedRate',
+            'bugaDepositInput', 'bugaCycle', 'bugaRate', 'targetLivingInput'
+        ];
+        const CHECK_IDS = ['ktcuSyncRetire', 'useSplitProduct', 'useFixedProduct', 'useBugaProduct'];
+
+        function captureInputs() {
+            const snap = { pensionTaxMode };
+            VALUE_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) snap[id] = el.value;
+            });
+            CHECK_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) snap[id] = el.checked;
+            });
+            return snap;
+        }
+
+        function applyInputs(snap) {
+            if (!snap) return;
+            VALUE_IDS.forEach(id => {
+                if (snap[id] !== undefined && document.getElementById(id)) {
+                    document.getElementById(id).value = snap[id];
+                }
+            });
+            CHECK_IDS.forEach(id => {
+                if (snap[id] !== undefined && document.getElementById(id)) {
+                    document.getElementById(id).checked = snap[id];
+                }
+            });
+            syncSlider('ktcuUnitsSlider', document.getElementById('ktcuUnitsInput').value);
+            if (snap.pensionTaxMode) {
+                setPensionTaxMode(snap.pensionTaxMode);
+            } else {
+                recalculateAll();
+            }
+        }
+
+        function saveCurrentScenario() {
+            if (savedScenarios.length >= 4) {
+                showToast('시나리오는 최대 4개까지 저장 가능합니다. 기존 항목을 삭제 후 저장해 주세요.');
+                return;
+            }
+            const nameInput = document.getElementById('scenarioNameInput');
+            const defaultName = `${calcState.retireAge}세 퇴직 · ${calcState.actualStartAge}세 개시`;
+            const name = (nameInput.value || '').trim() || defaultName;
+
+            savedScenarios.push({
+                id: Date.now(),
+                name,
+                retireAge: calcState.retireAge,
+                actualStartAge: calcState.actualStartAge,
+                pensionMonthlyMan: calcState.pensionDisplayMonthlyMan,
+                crevasseAvgMan: calcState.crevasseAvgMan,
+                postStartMonthlyMan: calcState.postStartMonthlyMan,
+                availableLumpSumMan: calcState.availableLumpSumMan,
+                total30YrAccumMan: calcState.total30YrAccumMan,
+                inputs: captureInputs()
+            });
+            localStorage.setItem(STORAGE_KEY_SCENARIOS, JSON.stringify(savedScenarios));
+            nameInput.value = '';
+            renderScenarioTable();
+            showToast(`'${name}' 시나리오가 저장되었습니다.`);
+        }
+
+        function loadScenario(id) {
+            const target = savedScenarios.find(s => s.id === id);
+            if (!target) return;
+            applyInputs(target.inputs);
+            showToast(`'${target.name}' 조건을 불러왔습니다.`);
+        }
+
+        function deleteScenario(id) {
+            savedScenarios = savedScenarios.filter(s => s.id !== id);
+            localStorage.setItem(STORAGE_KEY_SCENARIOS, JSON.stringify(savedScenarios));
+            renderScenarioTable();
+            showToast('시나리오가 삭제되었습니다.');
+        }
+
+        function renderScenarioTable() {
+            const tbody = document.getElementById('scenarioTableBody');
+            if (savedScenarios.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-400 text-xs sm:text-sm">
+                            저장된 시나리오가 없습니다. 상단에 이름을 입력하고 <strong>[시나리오 저장]</strong>을 눌러 최대 4개까지 비교해 보세요.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            tbody.innerHTML = savedScenarios.map(s => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-3 px-3 font-extrabold text-navy-900">${escapeHtml(s.name)}</td>
+                    <td class="py-3 px-3 text-slate-600">만 ${s.retireAge}세 / 만 ${s.actualStartAge}세</td>
+                    <td class="py-3 px-3 text-right font-bold text-indigo-700">월 ${fmtMonthly(s.pensionMonthlyMan)}만원</td>
+                    <td class="py-3 px-3 text-right font-bold text-amber-700">월 ${fmtMonthly(s.crevasseAvgMan)}만원</td>
+                    <td class="py-3 px-3 text-right font-extrabold text-emerald-700">월 ${fmtMonthly(s.postStartMonthlyMan)}만원</td>
+                    <td class="py-3 px-3 text-right font-semibold ${s.availableLumpSumMan < 0 ? 'text-rose-600' : 'text-slate-800'}">${fmtManwon(s.availableLumpSumMan)}만원</td>
+                    <td class="py-3 px-3 text-right font-extrabold text-navy-900">${fmtManwon(s.total30YrAccumMan)}만원</td>
+                    <td class="py-3 px-3 text-center">
+                        <div class="inline-flex items-center gap-1">
+                            <button onclick="loadScenario(${s.id})" class="text-[11px] bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 font-bold px-2.5 py-1 rounded-lg transition">불러오기</button>
+                            <button onclick="deleteScenario(${s.id})" class="text-slate-400 hover:text-rose-600 p-1 rounded transition" title="삭제">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        }
+
+        // ---------------------------------------------------------------------
+        // 7. 탭 전환 · 모달 · 토스트 · 초기화
+        // ---------------------------------------------------------------------
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('border-emerald-400', 'text-emerald-300', 'font-bold');
+                b.classList.add('border-transparent', 'text-slate-300', 'font-medium');
+            });
+
+            document.getElementById(`panel-${tabName}`).classList.add('active');
+            const btn = document.getElementById(`tab-btn-${tabName}`);
+            btn.classList.remove('border-transparent', 'text-slate-300', 'font-medium');
+            btn.classList.add('border-emerald-400', 'text-emerald-300', 'font-bold');
+
+            recalculateAll();
+            if (tabName === 'dashboard' && cashflowChartInstance) {
+                setTimeout(() => cashflowChartInstance.resize(), 60);
+            }
+        }
+
+        function openRedistModal() {
+            renderRedistTableModal();
+            document.getElementById('redistModal').classList.remove('hidden');
+        }
+        function closeRedistModal() {
+            document.getElementById('redistModal').classList.add('hidden');
+        }
+
+        function openCriteriaModal() {
+            document.getElementById('criteriaModal').classList.remove('hidden');
+        }
+        function closeCriteriaModal() {
+            document.getElementById('criteriaModal').classList.add('hidden');
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const box = document.getElementById('toast-box');
+            document.getElementById('toast-message').textContent = msg;
+            box.classList.remove('hidden');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => box.classList.add('hidden'), 3200);
+        }
+
+        function persistInputs() {
+            try {
+                localStorage.setItem(STORAGE_KEY_INPUTS, JSON.stringify(captureInputs()));
+            } catch (e) {}
+        }
+
+        function resetAllDefaults() {
+            localStorage.removeItem(STORAGE_KEY_INPUTS);
+            applyInputs({
+                birthYear: 1989, appointYear: 2016, retireYear: 2050, militaryMonths: 0,
+                valAInput: 5710000, valBInput: 5500000, finalIncomeInput: 6500000,
+                earlyYearsSlider: 0, postWorkIncomeInput: 0,
+                ktcuCurrentBal: 3000, ktcuPastYears: 5, ktcuUnitsInput: 1000,
+                ktcuAccumRate: 5.00, ktcuRemainYears: 24, ktcuSyncRetire: true,
+                useSplitProduct: true, splitRatioSlider: 100, splitYears: 10, splitRate: 5.00, splitTaxRateInput: 3.3,
+                useFixedProduct: true, fixedDepositInput: 5000, fixedYears: 5, fixedRate: 5.00,
+                useBugaProduct: true, bugaDepositInput: 3000, bugaCycle: 'monthly', bugaRate: 4.12,
+                targetLivingInput: 350, pensionTaxMode: 'net'
+            });
+            showToast('v2.1 최신 기본값으로 초기화되었습니다.');
+        }
+
+        // 초기 로드
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const rawScen = localStorage.getItem(STORAGE_KEY_SCENARIOS);
+                if (rawScen) savedScenarios = JSON.parse(rawScen);
+                const rawInputs = localStorage.getItem(STORAGE_KEY_INPUTS);
+                if (rawInputs) {
+                    applyInputs(JSON.parse(rawInputs));
+                } else {
+                    recalculateAll();
+                }
+            } catch (e) {
+                recalculateAll();
+            }
+            renderScenarioTable();
+        });
+    </script>
+</body>
+</html>
